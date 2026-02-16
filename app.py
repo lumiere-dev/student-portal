@@ -469,6 +469,7 @@ def check_magic_link_token():
 # ──────────────────────────────────────────────
 
 def show_login_page():
+    st.image("assets/logo.png", width=300)
     st.markdown('<p class="main-header">Student Portal</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Lumiere Education — Access your research program dashboard</p>', unsafe_allow_html=True)
 
@@ -539,7 +540,7 @@ def show_dashboard():
 
     # ── Sidebar ──
     with st.sidebar:
-        st.markdown("### Lumiere Education")
+        st.image("assets/logo.png", width=200)
         st.caption("Research Program Student Portal")
         st.markdown("---")
 
