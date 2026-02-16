@@ -131,8 +131,8 @@ STUDENT_FIELDS = {
     "revised_final_paper_due": "PM: Student's Revised Final Paper - Due date",
     "student_no_shows": "[Current + Archived] No. of Student No Shows in Mentor Meetings",
     "reason_for_interest": "Reason for Interest in Areas",
-    "publication_specialist": "Publication Specialist",
-    "publication_target": "Publication Target",
+    "publication_specialist": "Publication Specialist (Text)",
+    "publication_target": "Publication Target (Text)",
     "publication_specialist_email": "Publication Specialist Email",
     "publication_outcome": "PS: Latest Publication Outcome - Latest"
 }
@@ -417,8 +417,8 @@ def get_student_by_email(email):
                 "revised_final_paper_due": unwrap(fields.get(STUDENT_FIELDS["revised_final_paper_due"], "")),
                 "student_no_shows": unwrap(fields.get(STUDENT_FIELDS["student_no_shows"], 0), default=0),
                 "reason_for_interest": unwrap(fields.get(STUDENT_FIELDS["reason_for_interest"], "")),
-                "publication_specialist": unwrap(fields.get(STUDENT_FIELDS["publication_specialist"], "")),
-                "publication_target": unwrap(fields.get(STUDENT_FIELDS["publication_target"], "")),
+                "publication_specialist": fields.get(STUDENT_FIELDS["publication_specialist"], ""),
+                "publication_target": fields.get(STUDENT_FIELDS["publication_target"], ""),
                 "publication_specialist_email": unwrap(fields.get(STUDENT_FIELDS["publication_specialist_email"], "")),
                 "publication_outcome": unwrap(fields.get(STUDENT_FIELDS["publication_outcome"], ""))
             }
