@@ -130,7 +130,11 @@ STUDENT_FIELDS = {
     "program_manager_email": "Program Manager Email",
     "revised_final_paper_due": "PM: Student's Revised Final Paper - Due date",
     "student_no_shows": "[Current + Archived] No. of Student No Shows in Mentor Meetings",
-    "reason_for_interest": "Reason for Interest in Areas"
+    "reason_for_interest": "Reason for Interest in Areas",
+    "publication_specialist": "Publication Specialist",
+    "publication_target": "Publication Target",
+    "publication_specialist_email": "Publication Specialist Email",
+    "publication_outcome": "PS: Latest Publication Outcome - Latest"
 }
 
 DEADLINE_FIELDS = {
@@ -412,7 +416,11 @@ def get_student_by_email(email):
                 "program_manager_email": unwrap(fields.get(STUDENT_FIELDS["program_manager_email"], "")),
                 "revised_final_paper_due": unwrap(fields.get(STUDENT_FIELDS["revised_final_paper_due"], "")),
                 "student_no_shows": unwrap(fields.get(STUDENT_FIELDS["student_no_shows"], 0), default=0),
-                "reason_for_interest": unwrap(fields.get(STUDENT_FIELDS["reason_for_interest"], ""))
+                "reason_for_interest": unwrap(fields.get(STUDENT_FIELDS["reason_for_interest"], "")),
+                "publication_specialist": unwrap(fields.get(STUDENT_FIELDS["publication_specialist"], "")),
+                "publication_target": unwrap(fields.get(STUDENT_FIELDS["publication_target"], "")),
+                "publication_specialist_email": unwrap(fields.get(STUDENT_FIELDS["publication_specialist_email"], "")),
+                "publication_outcome": unwrap(fields.get(STUDENT_FIELDS["publication_outcome"], ""))
             }
     except Exception as e:
         st.error(f"Error fetching student: {e}")
@@ -568,7 +576,9 @@ def show_dashboard():
         view = st.radio(
             "Navigation",
             [
+                "Student Profile Summary",
                 "Deadlines & Submissions",
+                "Publication Program",
                 "Writing Center",
             ],
             label_visibility="collapsed"
@@ -603,19 +613,46 @@ def show_dashboard():
     )
 
     # ── Route to view ──
-    if view == "Deadlines & Submissions":
+    if view == "Student Profile Summary":
+        show_student_profile_summary(student)
+    elif view == "Deadlines & Submissions":
         show_deadlines_and_submissions(student)
+    elif view == "Publication Program":
+        show_publication_program(student)
     elif view == "Writing Center":
         show_writing_center(student)
+
+# ──────────────────────────────────────────────
+# VIEW: Student Profile Summary
+# ──────────────────────────────────────────────
+
+def show_student_profile_summary(student):
+    st.markdown("### Student Profile Summary")
+
+    mentor_name = student.get("mentor") or "Not yet assigned"
+    revised_due = student.get("revised_final_paper_due", "")
+
+    # Mentor banner card
+    st.markdown(f"""
+    <div style="background:linear-gradient(135deg, #8B1A2B 0%, #6B1520 100%);
+                border-radius:12px; padding:2rem; color:white; margin-bottom:1.5rem;">
+        <div style="font-size:0.85rem; opacity:0.9;">Your Mentor</div>
+        <div style="font-size:1.8rem; font-weight:700; margin-top:0.25rem;">{mentor_name}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div class="info-card">
+        <div style="font-size:0.85rem; color:#64748B;">Revised Final Paper Due Date</div>
+        <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{format_date(revised_due)}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: Deadlines & Submissions
 # ──────────────────────────────────────────────
 
 def show_deadlines_and_submissions(student):
-    mentor_name = student.get("mentor", "Not assigned")
-    st.markdown(f"**Mentor:** {mentor_name or 'Not assigned'}")
-
     deadlines = get_deadlines_for_student(student["name"])
 
     if not deadlines:
@@ -857,6 +894,46 @@ def show_mentor_info(student):
         st.markdown("---")
         st.markdown("**Mentor-Student Notes Summary**")
         st.markdown(format_notes_summary(student["notes_summary"]))
+
+# ──────────────────────────────────────────────
+# VIEW: Publication Program
+# ──────────────────────────────────────────────
+
+def show_publication_program(student):
+    st.markdown("### Publication Program")
+
+    specialist = student.get("publication_specialist") or "Not yet assigned"
+    specialist_email = student.get("publication_specialist_email") or ""
+    target = student.get("publication_target") or "Not yet set"
+    outcome = student.get("publication_outcome") or "—"
+
+    # Specialist banner card
+    st.markdown(f"""
+    <div style="background:linear-gradient(135deg, #8B1A2B 0%, #6B1520 100%);
+                border-radius:12px; padding:2rem; color:white; margin-bottom:1.5rem;">
+        <div style="font-size:0.85rem; opacity:0.9;">Your Publication Specialist</div>
+        <div style="font-size:1.8rem; font-weight:700; margin-top:0.25rem;">{specialist}</div>
+        {"<div style='font-size:0.95rem; opacity:0.85; margin-top:0.35rem;'>" + specialist_email + "</div>" if specialist_email else ""}
+    </div>
+    """, unsafe_allow_html=True)
+
+    left, right = st.columns(2)
+
+    with left:
+        st.markdown(f"""
+        <div class="info-card">
+            <div style="font-size:0.85rem; color:#64748B;">Publication Target</div>
+            <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{target}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with right:
+        st.markdown(f"""
+        <div class="info-card">
+            <div style="font-size:0.85rem; color:#64748B;">Latest Publication Outcome</div>
+            <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{outcome}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: Writing Center
