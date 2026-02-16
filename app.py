@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from pyairtable import Api
 import pandas as pd
@@ -5,6 +6,17 @@ from datetime import datetime, timedelta, timezone
 import resend
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import re
+
+
+def get_secret(key, default=None):
+    """Get config value from env var (Railway) or st.secrets (local), with optional default."""
+    val = os.environ.get(key)
+    if val is not None:
+        return val
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return default
 
 # Page config
 st.set_page_config(
@@ -20,16 +32,16 @@ st.set_page_config(
 
 @st.cache_resource
 def get_airtable_api():
-    return Api(st.secrets["AIRTABLE_API_KEY"])
+    return Api(get_secret("AIRTABLE_API_KEY"))
 
 @st.cache_resource
 def get_tables():
     api = get_airtable_api()
-    base = api.base(st.secrets["AIRTABLE_BASE_ID"])
+    base = api.base(get_secret("AIRTABLE_BASE_ID"))
     return {
-        "students": base.table(st.secrets["STUDENT_TABLE"]),
-        "deadlines": base.table(st.secrets["DEADLINES_TABLE"]),
-        "mentors": base.table(st.secrets["MENTOR_TABLE"])
+        "students": base.table(get_secret("STUDENT_TABLE")),
+        "deadlines": base.table(get_secret("DEADLINES_TABLE")),
+        "mentors": base.table(get_secret("MENTOR_TABLE"))
     }
 
 # ──────────────────────────────────────────────
@@ -37,7 +49,7 @@ def get_tables():
 # ──────────────────────────────────────────────
 
 def get_serializer():
-    return URLSafeTimedSerializer(st.secrets["MAGIC_LINK_SECRET"])
+    return URLSafeTimedSerializer(get_secret("MAGIC_LINK_SECRET"))
 
 def generate_magic_token(email):
     """Generate a signed token containing the email"""
@@ -55,10 +67,10 @@ def verify_magic_token(token, max_age=3600):
 
 def send_magic_link(email, student_name):
     """Send magic link email to student"""
-    resend.api_key = st.secrets["RESEND_API_KEY"]
+    resend.api_key = get_secret("RESEND_API_KEY")
 
     token = generate_magic_token(email)
-    base_url = st.secrets.get("APP_URL", "http://localhost:8502")
+    base_url = get_secret("APP_URL", "http://localhost:8502")
     magic_link = f"{base_url}?token={token}"
 
     # Extract first name from "Name | Cohort | Program" format
@@ -66,7 +78,7 @@ def send_magic_link(email, student_name):
 
     try:
         resend.Emails.send({
-            "from": st.secrets.get("FROM_EMAIL", "Student Portal <onboarding@resend.dev>"),
+            "from": get_secret("FROM_EMAIL", "Student Portal <onboarding@resend.dev>"),
             "to": [email],
             "subject": "Your Student Portal Login Link",
             "html": f"""
@@ -373,7 +385,7 @@ def is_overdue(due_date_str, status):
 def get_student_by_email(email):
     """Find student by email in Student Table"""
     tables = get_tables()
-    email_field = st.secrets.get("STUDENT_EMAIL_FIELD", "Email")
+    email_field = get_secret("STUDENT_EMAIL_FIELD", "Email")
     try:
         records = tables["students"].all(
             formula=f"LOWER({{{email_field}}}) = LOWER('{email}')"
@@ -525,7 +537,7 @@ def show_login_page():
                     unlock_submitted = st.form_submit_button("Unlock", use_container_width=True)
 
                     if unlock_submitted:
-                        if admin_key == st.secrets["ADMIN_KEY"]:
+                        if admin_key == get_secret("ADMIN_KEY"):
                             st.session_state.team_unlocked = True
                             st.rerun()
                         else:
@@ -863,7 +875,7 @@ def show_writing_center(student):
     """, unsafe_allow_html=True)
 
     # Writing Center Portal link
-    writing_center_url = st.secrets.get("WRITING_CENTER_URL", "")
+    writing_center_url = get_secret("WRITING_CENTER_URL", "")
     if writing_center_url:
         st.markdown("#### Program Writing Center Portal")
         st.markdown(f"""
