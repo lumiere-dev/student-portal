@@ -83,12 +83,12 @@ def send_magic_link(email, student_name):
             "subject": "Your Student Portal Login Link",
             "html": f"""
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #8B1A2B;">Welcome to the Student Portal</h2>
+                <h2 style="color: #BE1E2D;">Welcome to the Student Portal</h2>
                 <p>Hi {first_name},</p>
                 <p>Click the button below to access your student dashboard:</p>
                 <p style="margin: 30px 0;">
                     <a href="{magic_link}"
-                       style="background: linear-gradient(135deg, #8B1A2B 0%, #6B1520 100%);
+                       style="background: linear-gradient(135deg, #BE1E2D 0%, #8B1520 100%);
                               color: white;
                               padding: 12px 30px;
                               text-decoration: none;
@@ -162,7 +162,7 @@ SUBMISSION_FIELDS = [
 ]
 
 # ──────────────────────────────────────────────
-# Custom CSS — Teal / Emerald Student Theme
+# Custom CSS — Lumiere Brand Theme
 # ──────────────────────────────────────────────
 
 st.markdown("""
@@ -171,12 +171,12 @@ st.markdown("""
     .main-header {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #8B1A2B;
+        color: #333333;
         margin-bottom: 0.5rem;
     }
     .sub-header {
         font-size: 1.1rem;
-        color: #64748B;
+        color: #666666;
         margin-bottom: 2rem;
     }
     .student-name-header {
@@ -185,14 +185,22 @@ st.markdown("""
         color: #1E293B;
         margin-bottom: 1rem;
         padding-bottom: 0.5rem;
-        border-bottom: 2px solid #8B1A2B;
+        border-bottom: 2px solid #BE1E2D;
     }
 
     /* Cards */
-    .metric-card {
-        background: linear-gradient(135deg, #8B1A2B 0%, #6B1520 100%);
+    .student-card {
+        background: #FFFFFF;
         border-radius: 12px;
-        padding: 1.25rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 1rem;
+        border-left: 4px solid #BE1E2D;
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #BE1E2D 0%, #8B1520 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
         color: white;
         margin-bottom: 0.75rem;
     }
@@ -215,8 +223,8 @@ st.markdown("""
 
     /* Status badges */
     .status-confirmed {
-        background-color: #DEF7EC;
-        color: #03543F;
+        background-color: #ECFDF5;
+        color: #065F46;
         padding: 0.25rem 0.75rem;
         border-radius: 20px;
         font-size: 0.85rem;
@@ -224,7 +232,7 @@ st.markdown("""
         display: inline-block;
     }
     .status-pending {
-        background-color: #FEF3C7;
+        background-color: #FFFBEB;
         color: #92400E;
         padding: 0.25rem 0.75rem;
         border-radius: 20px;
@@ -233,7 +241,7 @@ st.markdown("""
         display: inline-block;
     }
     .status-overdue {
-        background-color: #FEE2E2;
+        background-color: #FEF2F2;
         color: #991B1B;
         padding: 0.25rem 0.75rem;
         border-radius: 20px;
@@ -241,31 +249,80 @@ st.markdown("""
         font-weight: 500;
         display: inline-block;
     }
+    .deadline-submitted {
+        background-color: #ECFDF5;
+        border-left: 4px solid #10B981;
+    }
+    .deadline-pending {
+        background-color: #FFFBEB;
+        border-left: 4px solid #F59E0B;
+    }
+    .deadline-overdue {
+        background-color: #FEF2F2;
+        border-left: 4px solid #EF4444;
+    }
 
     /* Preview mode */
     .preview-banner {
-        background-color: #FEF3C7;
+        background-color: #FFFBEB;
         border: 1px solid #F59E0B;
         border-radius: 8px;
         padding: 0.75rem 1rem;
         margin-bottom: 1rem;
+        color: #92400E;
     }
 
-    /* Sidebar tweaks */
+    /* Dark navy sidebar */
     [data-testid="stSidebar"] {
-        background-color: #1A1A1A;
+        background-color: #1A1A2E;
+        color: #FFFFFF;
     }
-    [data-testid="stSidebar"] .stMarkdown h3,
-    [data-testid="stSidebar"] .stMarkdown p,
-    [data-testid="stSidebar"] .stMarkdown strong,
-    [data-testid="stSidebar"] .stMarkdown span,
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label span,
-    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label div {
-        color: #F1F5F9 !important;
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] h4,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] label {
+        color: #FFFFFF !important;
     }
     [data-testid="stSidebar"] .stCaption p {
-        color: #94A3B8 !important;
+        color: #FFFFFF !important;
+    }
+    [data-testid="stSidebar"] hr {
+        border-color: rgba(255,255,255,0.2);
+    }
+    [data-testid="stSidebar"] .stButton button {
+        background-color: rgba(255,255,255,0.1);
+        color: #FFFFFF !important;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    [data-testid="stSidebar"] .stButton button:hover {
+        background-color: rgba(255,255,255,0.2);
+        border-color: rgba(255,255,255,0.5);
+    }
+    /* Rectangular nav style for sidebar radio */
+    [data-testid="stSidebar"] .stRadio > div {
+        gap: 0.25rem !important;
+    }
+    [data-testid="stSidebar"] .stRadio > div > label {
+        background-color: transparent !important;
+        border-radius: 6px !important;
+        padding: 0.6rem 1rem !important;
+        margin: 0 !important;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    [data-testid="stSidebar"] .stRadio > div > label:hover {
+        background-color: rgba(255,255,255,0.1) !important;
+    }
+    [data-testid="stSidebar"] .stRadio > div > label[data-checked="true"] {
+        background-color: rgba(255,255,255,0.15) !important;
+        border-left: 3px solid #DC1E35 !important;
+    }
+    /* Hide radio circle */
+    [data-testid="stSidebar"] .stRadio > div > label > div:first-child {
+        display: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -489,14 +546,107 @@ def check_magic_link_token():
 # ──────────────────────────────────────────────
 
 def show_login_page():
-    st.image("assets/logo.png", width=300)
-    st.markdown('<p class="main-header">Student Portal</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Lumiere Education — Access your research program dashboard</p>', unsafe_allow_html=True)
+    import base64
+    st.markdown("""
+    <style>
+        .stApp {
+            background-color: #1A1A2E;
+        }
+        /* Hide Streamlit chrome */
+        #MainMenu, header, footer { visibility: hidden; }
+        /* Push card down for vertical centering */
+        .block-container {
+            padding-top: 10vh !important;
+            max-width: 100% !important;
+        }
+        /* White card on the middle column
+           Covers both old ("column") and new ("stColumn") Streamlit testid values */
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2),
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(2) {
+            background: white !important;
+            border-radius: 16px !important;
+            padding: 2.5rem !important;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4) !important;
+        }
+        /* Text colours inside card */
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) p,
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) label,
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) span,
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(2) p,
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(2) label,
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(2) span {
+            color: #1A1A2E !important;
+        }
+        /* Input field */
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) input,
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(2) input {
+            border: 1px solid #CBD5E1 !important;
+            border-radius: 8px !important;
+            color: #1A1A2E !important;
+            background: white !important;
+        }
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) input::placeholder,
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(2) input::placeholder {
+            color: #94A3B8 !important;
+        }
+        /* Buttons */
+        [data-testid="stFormSubmitButton"] > button,
+        .stButton > button {
+            background-color: #DC1E35 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+        }
+        [data-testid="stFormSubmitButton"] > button:hover,
+        .stButton > button:hover {
+            background-color: #B01829 !important;
+        }
+        [data-testid="stFormSubmitButton"] > button p,
+        .stButton > button p {
+            color: white !important;
+        }
+        /* Divider inside card */
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) hr,
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(2) hr {
+            border-color: #E2E8F0 !important;
+        }
+        /* Expander (Team Access) inside card */
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) details,
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(2) details {
+            background: #F8FAFC !important;
+            border: 1px solid #CBD5E1 !important;
+            border-radius: 8px !important;
+        }
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) details summary,
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) details summary *,
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(2) details summary,
+        [data-testid="stHorizontalBlock"] [data-testid="column"]:nth-child(2) details summary * {
+            color: #1A1A2E !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        st.markdown("### Sign In")
+        # Logo + header inside the card
+        with open("assets/logo.png", "rb") as f:
+            logo_b64 = base64.b64encode(f.read()).decode()
+        st.markdown(
+            f'<div style="text-align:center; margin-bottom:0.5rem;">'
+            f'<img src="data:image/png;base64,{logo_b64}" width="220">'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<h2 style="text-align:center; color:#1A1A2E; font-size:1.5rem; font-weight:700; margin:0.5rem 0 0.25rem;">Student Portal</h2>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<p style="text-align:center; color:#94A3B8; font-size:0.82rem; margin-bottom:1.5rem; line-height:1.5;">Track your research program progress, deadlines, and submissions all in one place.</p>',
+            unsafe_allow_html=True
+        )
 
         if st.session_state.magic_link_sent:
             st.success("Check your email! We've sent you a magic link to access the portal.")
@@ -505,8 +655,16 @@ def show_login_page():
                 st.session_state.magic_link_sent = False
                 st.rerun()
         else:
+            st.markdown(
+                '<p style="font-size:0.75rem; font-weight:600; letter-spacing:0.08em; color:#64748B; margin-bottom:0.25rem; text-transform:uppercase;">EMAIL ADDRESS</p>',
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                '<p style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.5rem;">Enter the email address that you\'ve shared with our team.</p>',
+                unsafe_allow_html=True
+            )
             with st.form("login_form"):
-                email = st.text_input("Email Address", placeholder="Enter your student email")
+                email = st.text_input("Email Address", label_visibility="collapsed", placeholder="your.email@example.com")
                 submitted = st.form_submit_button("Send Magic Link", use_container_width=True)
 
                 if submitted and email:
@@ -567,6 +725,10 @@ def show_login_page():
                         st.error(f"Connection failed: {e}")
         else:
             with st.expander("Team Access"):
+                st.markdown(
+                    '<p style="font-size:0.8rem; color:#64748B; margin-bottom:0.75rem;">For Lumiere team members only. Enter your admin key to preview the portal as any student.</p>',
+                    unsafe_allow_html=True
+                )
                 with st.form("team_unlock_form"):
                     admin_key = st.text_input("Admin Key", type="password", placeholder="Enter admin key")
                     unlock_submitted = st.form_submit_button("Unlock", use_container_width=True)
@@ -584,16 +746,13 @@ def show_login_page():
 
 def show_dashboard():
     student = st.session_state.student_record
+    display_name = student["name"].split("|")[0].strip() if student else ""
 
     # ── Sidebar ──
     with st.sidebar:
-        st.image("assets/logo.png", width=200)
-        st.caption("Research Program Student Portal")
-        st.markdown("---")
-
-        display_name = student["name"].split("|")[0].strip() if student else ""
-        st.markdown(f"**{display_name}**")
-        st.caption(st.session_state.student_email)
+        st.image("assets/logo.png", width=80)
+        st.markdown(f"### Welcome, {display_name}")
+        st.markdown(f'<p style="color:#FFFFFF; font-size:0.85rem; margin-top:-0.75rem;">{st.session_state.student_email}</p>', unsafe_allow_html=True)
 
         if st.session_state.is_preview:
             st.warning("Preview Mode")
@@ -661,7 +820,7 @@ def show_student_profile_summary(student):
 
     # Mentor banner card
     st.markdown(f"""
-    <div style="background:linear-gradient(135deg, #8B1A2B 0%, #6B1520 100%);
+    <div style="background:linear-gradient(135deg, #BE1E2D 0%, #8B1520 100%);
                 border-radius:12px; padding:2rem; color:white; margin-bottom:1.5rem;">
         <div style="font-size:0.85rem; opacity:0.9;">Your Mentor</div>
         <div style="font-size:1.8rem; font-weight:700; margin-top:0.25rem;">{mentor_name}</div>
@@ -856,7 +1015,7 @@ def show_mentor_info(student):
 
     # Mentor banner card
     st.markdown(f"""
-    <div style="background:linear-gradient(135deg, #8B1A2B 0%, #6B1520 100%);
+    <div style="background:linear-gradient(135deg, #BE1E2D 0%, #8B1520 100%);
                 border-radius:12px; padding:2rem; color:white; margin-bottom:1.5rem;">
         <div style="font-size:0.85rem; opacity:0.9;">Your Mentor</div>
         <div style="font-size:1.8rem; font-weight:700; margin-top:0.25rem;">
@@ -936,7 +1095,7 @@ def show_publication_program(student):
 
     # Specialist banner card
     st.markdown(f"""
-    <div style="background:linear-gradient(135deg, #8B1A2B 0%, #6B1520 100%);
+    <div style="background:linear-gradient(135deg, #BE1E2D 0%, #8B1520 100%);
                 border-radius:12px; padding:2rem; color:white; margin-bottom:1.5rem;">
         <div style="font-size:0.85rem; opacity:0.9;">Your Publication Specialist</div>
         <div style="font-size:1.8rem; font-weight:700; margin-top:0.25rem;">{specialist}</div>
@@ -987,7 +1146,7 @@ def show_writing_center(student):
             <p>Use the following link to book a meeting or request written feedback
             from your writing coach!</p>
             <p><a href="{writing_center_url}" target="_blank"
-                  style="color:#8B1A2B;">{writing_center_url}</a></p>
+                  style="color:#BE1E2D;">{writing_center_url}</a></p>
         </div>
         """, unsafe_allow_html=True)
 
