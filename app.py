@@ -705,32 +705,6 @@ def show_login_page():
                     else:
                         st.error("Student email not found.")
 
-            with st.expander("Debug: Environment & Airtable Connection"):
-                st.markdown("**Environment Variables**")
-                env_vars = [
-                    "AIRTABLE_API_KEY", "AIRTABLE_BASE_ID",
-                    "STUDENT_TABLE", "DEADLINES_TABLE", "MENTOR_TABLE",
-                    "STUDENT_EMAIL_FIELD", "MAGIC_LINK_SECRET",
-                    "RESEND_API_KEY", "APP_URL", "FROM_EMAIL",
-                    "ADMIN_KEY", "WRITING_CENTER_URL",
-                ]
-                for var in env_vars:
-                    val = get_secret(var)
-                    if val:
-                        st.success(f"{var}: SET ({len(val)} chars)")
-                    else:
-                        st.error(f"{var}: MISSING")
-
-                st.markdown("**Airtable Connection Test**")
-                if st.button("Test Airtable Connection"):
-                    try:
-                        api = Api(get_secret("AIRTABLE_API_KEY"))
-                        base = api.base(get_secret("AIRTABLE_BASE_ID"))
-                        table = base.table(get_secret("STUDENT_TABLE"))
-                        records = table.all(max_records=1)
-                        st.success(f"Connected! Fetched {len(records)} record(s) from student table.")
-                    except Exception as e:
-                        st.error(f"Connection failed: {e}")
         else:
             with st.expander("Team Access"):
                 st.markdown(
