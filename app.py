@@ -931,64 +931,41 @@ def show_deadlines_and_submissions(student):
     except Exception:
         pass
 
-    # ── Timeline-style deadline cards ──
+    # ── Deadline rows ──
     for dl in deadlines:
         dtype = dl["type"] or "Deadline"
-        due_date = format_date(dl["due_date"])
         status = dl["status"]
-        date_submitted = dl["date_submitted"]
-        submissions = dl.get("submissions", {})
         overdue = is_overdue(dl["due_date"], status)
 
         if status == "Submitted":
-            dot_color = "#16A34A"
             icon = "✅"
-            badge = '<span style="background:#DEF7EC; color:#03543F; padding:0.2rem 0.65rem; border-radius:20px; font-size:0.8rem; font-weight:500;">Submitted</span>'
         elif overdue:
-            dot_color = "#EF4444"
             icon = "⚠️"
-            badge = '<span style="background:#FEE2E2; color:#991B1B; padding:0.2rem 0.65rem; border-radius:20px; font-size:0.8rem; font-weight:500;">Overdue</span>'
         else:
-            dot_color = "#F59E0B"
             icon = "📅"
-            badge = '<span style="background:#FEF3C7; color:#92400E; padding:0.2rem 0.65rem; border-radius:20px; font-size:0.8rem; font-weight:500;">Pending</span>'
 
-        # Submission date text
-        if date_submitted:
-            sub_text = f"Submitted {format_datetime_ist(date_submitted)}"
-        elif status == "Submitted":
-            sub_text = "Submitted"
-        else:
-            sub_text = ""
+        with st.container():
+            col1, col2, col3 = st.columns([2, 1, 1])
 
-        st.markdown(f"""
-        <div style="display:flex; gap:1rem; margin-bottom:0.25rem;">
-            <div style="display:flex; flex-direction:column; align-items:center; padding-top:0.35rem;">
-                <div style="width:12px; height:12px; border-radius:50%; background:{dot_color}; flex-shrink:0;"></div>
-                <div style="width:2px; flex:1; background:#E2E8F0; margin-top:4px;"></div>
-            </div>
-            <div style="flex:1; background:white; border-radius:10px; padding:1rem 1.25rem;
-                        box-shadow:0 1px 4px rgba(0,0,0,0.06); margin-bottom:0.5rem;">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-                    <div>
-                        <div style="font-size:1rem; font-weight:600; color:#1E293B;">{icon} {dtype}</div>
-                        <div style="font-size:0.85rem; color:#64748B; margin-top:0.2rem;">Due {due_date}</div>
-                    </div>
-                    <div>{badge}</div>
-                </div>
-                {"<div style='font-size:0.8rem; color:#64748B; margin-top:0.5rem;'>" + sub_text + "</div>" if sub_text else ""}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+            with col1:
+                st.markdown(f"{icon} **{dtype}**")
 
-        # Show submission content / attachments below the card
-        if submissions:
-            for field_name, value in submissions.items():
-                st.markdown(f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**{field_name}**")
-                _render_submission_value(value)
+            with col2:
+                st.markdown(f"**Due:** {format_date(dl['due_date'])}")
 
-    # Close the timeline
-    st.markdown("")
+            with col3:
+                if status == "Submitted":
+                    st.success(f"Submitted {format_datetime_ist(dl['date_submitted'])}" if dl["date_submitted"] else "Submitted")
+                elif overdue:
+                    st.error("Overdue")
+                else:
+                    st.warning("Not Submitted")
+
+            if dl.get("submissions"):
+                for field_name, value in dl["submissions"].items():
+                    _render_submission_value(value)
+
+        st.markdown("---")
 
 
 def _render_submission_value(value):
