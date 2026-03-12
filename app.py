@@ -127,7 +127,10 @@ STUDENT_FIELDS = {
     "hours_recorded": "[Current + Archived] No. of Hours Recorded",
     "foundation_student": "Foundation Student",
     "tuition_paid": "OB: Full Tuition Paid",
+    "program_manager_name": "Program Manager (Text)",
     "program_manager_email": "Program Manager Email",
+    "writing_coach_name": "Writing Coach Name (Text)",
+    "writing_coach_email": "Writing Coach Email",
     "revised_final_paper_due": "PM: Student's Revised Final Paper - Due date",
     "student_no_shows": "[Current + Archived] No. of Student No Shows in Mentor Meetings",
     "reason_for_interest": "Reason for Interest in Areas",
@@ -472,7 +475,10 @@ def get_student_by_email(email):
                 "hours_recorded": fields.get(STUDENT_FIELDS["hours_recorded"], ""),
                 "foundation_student": fields.get(STUDENT_FIELDS["foundation_student"], ""),
                 "tuition_paid": fields.get(STUDENT_FIELDS["tuition_paid"], ""),
+                "program_manager_name": unwrap(fields.get(STUDENT_FIELDS["program_manager_name"], "")),
                 "program_manager_email": unwrap(fields.get(STUDENT_FIELDS["program_manager_email"], "")),
+                "writing_coach_name": fields.get(STUDENT_FIELDS["writing_coach_name"], ""),
+                "writing_coach_email": unwrap(fields.get(STUDENT_FIELDS["writing_coach_email"], "")),
                 "revised_final_paper_due": unwrap(fields.get(STUDENT_FIELDS["revised_final_paper_due"], "")),
                 "student_no_shows": unwrap(fields.get(STUDENT_FIELDS["student_no_shows"], 0), default=0),
                 "reason_for_interest": unwrap(fields.get(STUDENT_FIELDS["reason_for_interest"], "")),
@@ -821,7 +827,10 @@ def show_student_profile_summary(student):
     revised_due = student.get("revised_final_paper_due", "")
     completed = student.get("completed_meetings", 0) or 0
     expected = student.get("expected_meetings", 0) or 0
-    hours = student.get("hours_recorded", "")
+    pm_name = student.get("program_manager_name") or "Not assigned"
+    pm_email = student.get("program_manager_email") or ""
+    wc_name = student.get("writing_coach_name") or "Not assigned"
+    wc_email = student.get("writing_coach_email") or ""
 
     # Mentor banner card
     st.markdown(f"""
@@ -832,37 +841,48 @@ def show_student_profile_summary(student):
     </div>
     """, unsafe_allow_html=True)
 
-    # Info cards row
+    # Revised paper due date
+    st.markdown(f"""
+    <div class="info-card">
+        <div style="font-size:0.85rem; color:#64748B;">Revised Final Paper Due Date</div>
+        <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{format_date(revised_due)}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Meetings progress
+    st.markdown("""
+    <div class="info-card">
+        <div style="font-size:0.85rem; color:#64748B; margin-bottom:0.5rem;">Meetings Progress</div>
+    """, unsafe_allow_html=True)
+    if expected > 0:
+        st.progress(min(completed / expected, 1.0))
+        st.caption(f"{completed} of {expected} meetings completed")
+    else:
+        st.caption("No meetings scheduled yet")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Program Manager + Writing Coach side by side
     col1, col2 = st.columns(2)
 
     with col1:
         st.markdown(f"""
         <div class="info-card">
-            <div style="font-size:0.85rem; color:#64748B;">Revised Final Paper Due Date</div>
-            <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{format_date(revised_due)}</div>
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.5rem;">Program Manager</div>
+            <div style="font-size:1rem; font-weight:600; color:#1E293B;">{pm_name}</div>
+            {"<div style='font-size:0.88rem; color:#64748B; margin-top:0.2rem;'>" + pm_email + "</div>" if pm_email else ""}
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
         st.markdown(f"""
         <div class="info-card">
-            <div style="font-size:0.85rem; color:#64748B;">Hours Recorded</div>
-            <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{format_duration(hours)}</div>
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.5rem;">Writing Coach</div>
+            <div style="font-size:1rem; font-weight:600; color:#1E293B;">{wc_name}</div>
+            {"<div style='font-size:0.88rem; color:#64748B; margin-top:0.2rem;'>" + wc_email + "</div>" if wc_email else ""}
         </div>
         """, unsafe_allow_html=True)
-
-    # Meetings progress
-    st.markdown("""
-    <div class="info-card" style="margin-top:0;">
-        <div style="font-size:0.85rem; color:#64748B; margin-bottom:0.5rem;">Meetings Progress</div>
-    """, unsafe_allow_html=True)
-    if expected > 0:
-        progress = min(completed / expected, 1.0)
-        st.progress(progress)
-        st.caption(f"{completed} of {expected} meetings completed")
-    else:
-        st.caption("No meetings scheduled yet")
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: Deadlines & Submissions
