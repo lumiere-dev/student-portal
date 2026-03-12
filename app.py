@@ -371,7 +371,7 @@ def format_duration(value):
         return str(value)
 
 def format_date(date_str):
-    """Format date string as 'DD Month YYYY' (e.g. 04 July 2025)"""
+    """Format date string as 'Month Dth, YYYY' (e.g. July 4th, 2025)"""
     if not date_str:
         return "Not set"
     if isinstance(date_str, list):
@@ -380,7 +380,9 @@ def format_date(date_str):
         return "Not set"
     try:
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-        return f"{date_obj.day:02d} {date_obj.strftime('%B')} {date_obj.year}"
+        day = date_obj.day
+        suffix = "th" if 11 <= day <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+        return f"{date_obj.strftime('%B')} {day}{suffix}, {date_obj.year}"
     except Exception:
         return date_str
 
@@ -817,6 +819,9 @@ def show_student_profile_summary(student):
 
     mentor_name = student.get("mentor") or "Not yet assigned"
     revised_due = student.get("revised_final_paper_due", "")
+    completed = student.get("completed_meetings", 0) or 0
+    expected = student.get("expected_meetings", 0) or 0
+    hours = student.get("hours_recorded", "")
 
     # Mentor banner card
     st.markdown(f"""
@@ -827,12 +832,37 @@ def show_student_profile_summary(student):
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"""
-    <div class="info-card">
-        <div style="font-size:0.85rem; color:#64748B;">Revised Final Paper Due Date</div>
-        <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{format_date(revised_due)}</div>
-    </div>
+    # Info cards row
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown(f"""
+        <div class="info-card">
+            <div style="font-size:0.85rem; color:#64748B;">Revised Final Paper Due Date</div>
+            <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{format_date(revised_due)}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+        <div class="info-card">
+            <div style="font-size:0.85rem; color:#64748B;">Hours Recorded</div>
+            <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{format_duration(hours)}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Meetings progress
+    st.markdown("""
+    <div class="info-card" style="margin-top:0;">
+        <div style="font-size:0.85rem; color:#64748B; margin-bottom:0.5rem;">Meetings Progress</div>
     """, unsafe_allow_html=True)
+    if expected > 0:
+        progress = min(completed / expected, 1.0)
+        st.progress(progress)
+        st.caption(f"{completed} of {expected} meetings completed")
+    else:
+        st.caption("No meetings scheduled yet")
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: Deadlines & Submissions
@@ -852,7 +882,7 @@ def show_deadlines_and_submissions(student):
     pending = total - submitted - overdue_count
 
     st.markdown(f"""
-    <div style="display:flex; gap:1.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+    <div style="display:flex; gap:1.5rem; margin-bottom:1.25rem; flex-wrap:wrap;">
         <div style="display:flex; align-items:center; gap:0.4rem;">
             <span style="width:10px; height:10px; border-radius:50%; background:#16A34A; display:inline-block;"></span>
             <span style="font-size:0.9rem; color:#475569;">{submitted} Submitted</span>
@@ -868,6 +898,39 @@ def show_deadlines_and_submissions(student):
     </div>
     """, unsafe_allow_html=True)
 
+    # ── Overdue + Next Deadline banners ──
+    try:
+        now = datetime.now()
+        pending_dl = [d for d in deadlines if d["status"] != "Submitted" and d["due_date"]]
+        overdue_dl = [d for d in pending_dl if datetime.strptime(d["due_date"], "%Y-%m-%d") < now]
+        future_dl = [d for d in pending_dl if datetime.strptime(d["due_date"], "%Y-%m-%d") >= now]
+
+        if overdue_dl:
+            overdue_list = ", ".join(
+                f"{d['type']} ({format_date(d['due_date'])})" for d in overdue_dl
+            )
+            st.markdown(
+                f'<div style="background:rgba(239,68,68,0.1); border:1px solid #EF4444; '
+                f'border-radius:10px; padding:1rem; margin-bottom:0.75rem;">'
+                f'<strong>⚠️ Overdue:</strong> {overdue_list}'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+        if future_dl:
+            next_dl = future_dl[0]
+            days_left = (datetime.strptime(next_dl["due_date"], "%Y-%m-%d") - now).days
+            st.markdown(
+                f'<div style="background:rgba(220,30,53,0.1); border:1px solid #DC1E35; '
+                f'border-radius:10px; padding:1rem; margin-bottom:1rem;">'
+                f'<strong>⏰ Next Deadline:</strong> {next_dl["type"]} — '
+                f'due {format_date(next_dl["due_date"])} ({days_left} day{"s" if days_left != 1 else ""} away)'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+    except Exception:
+        pass
+
     # ── Timeline-style deadline cards ──
     for dl in deadlines:
         dtype = dl["type"] or "Deadline"
@@ -879,12 +942,15 @@ def show_deadlines_and_submissions(student):
 
         if status == "Submitted":
             dot_color = "#16A34A"
+            icon = "✅"
             badge = '<span style="background:#DEF7EC; color:#03543F; padding:0.2rem 0.65rem; border-radius:20px; font-size:0.8rem; font-weight:500;">Submitted</span>'
         elif overdue:
             dot_color = "#EF4444"
+            icon = "⚠️"
             badge = '<span style="background:#FEE2E2; color:#991B1B; padding:0.2rem 0.65rem; border-radius:20px; font-size:0.8rem; font-weight:500;">Overdue</span>'
         else:
             dot_color = "#F59E0B"
+            icon = "📅"
             badge = '<span style="background:#FEF3C7; color:#92400E; padding:0.2rem 0.65rem; border-radius:20px; font-size:0.8rem; font-weight:500;">Pending</span>'
 
         # Submission date text
@@ -905,7 +971,7 @@ def show_deadlines_and_submissions(student):
                         box-shadow:0 1px 4px rgba(0,0,0,0.06); margin-bottom:0.5rem;">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
                     <div>
-                        <div style="font-size:1rem; font-weight:600; color:#1E293B;">{dtype}</div>
+                        <div style="font-size:1rem; font-weight:600; color:#1E293B;">{icon} {dtype}</div>
                         <div style="font-size:0.85rem; color:#64748B; margin-top:0.2rem;">Due {due_date}</div>
                     </div>
                     <div>{badge}</div>
