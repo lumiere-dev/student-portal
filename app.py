@@ -30,11 +30,11 @@ st.set_page_config(
 # Airtable Connection
 # ──────────────────────────────────────────────
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def get_airtable_api():
     return Api(get_secret("AIRTABLE_API_KEY"))
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def get_tables():
     api = get_airtable_api()
     base = api.base(get_secret("AIRTABLE_BASE_ID"))
@@ -448,7 +448,7 @@ def is_overdue(due_date_str, status):
 # Data Functions
 # ──────────────────────────────────────────────
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=300, show_spinner=False)
 def get_student_by_email(email):
     """Find student by email in Student Table"""
     tables = get_tables()
@@ -493,7 +493,7 @@ def get_student_by_email(email):
         st.error(f"Error fetching student: {e}")
     return None
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=300, show_spinner=False)
 def get_deadlines_for_student(student_name):
     """Get all deadlines for a specific student"""
     tables = get_tables()
