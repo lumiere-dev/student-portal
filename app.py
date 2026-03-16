@@ -138,7 +138,8 @@ STUDENT_FIELDS = {
     "publication_specialist": "Publication Specialist (Text)",
     "publication_target": "Publication Target (Text)",
     "publication_specialist_email": "Publication Specialist Email",
-    "publication_outcome": "PS: Latest Publication Outcome - Latest"
+    "publication_outcome": "PS: Latest Publication Outcome - Latest",
+    "submission_portal": "Student Submission Portal Lookup"
 }
 
 DEADLINE_FIELDS = {
@@ -487,7 +488,8 @@ def get_student_by_email(email):
                 "publication_specialist": fields.get(STUDENT_FIELDS["publication_specialist"], ""),
                 "publication_target": fields.get(STUDENT_FIELDS["publication_target"], ""),
                 "publication_specialist_email": unwrap(fields.get(STUDENT_FIELDS["publication_specialist_email"], "")),
-                "publication_outcome": unwrap(fields.get(STUDENT_FIELDS["publication_outcome"], ""))
+                "publication_outcome": unwrap(fields.get(STUDENT_FIELDS["publication_outcome"], "")),
+                "submission_portal": unwrap(fields.get(STUDENT_FIELDS["submission_portal"], ""))
             }
     except Exception as e:
         st.error(f"Error fetching student: {e}")
@@ -864,7 +866,13 @@ def show_student_profile_summary(student):
                 <div style="background:linear-gradient(90deg, #BE1E2D, #8B1520); width:{pct}%;
                             height:100%; border-radius:999px; transition:width 0.3s;"></div>
             </div>
-            <div style="font-size:0.88rem; color:#475569;">{progress_label}</div>
+            <div style="font-size:0.88rem; color:#475569; margin-bottom:0.75rem;">{progress_label}</div>
+            <a href="https://airtable.com/appK9HemdsQBzVefU/shrMUNFRb6lEQwHfk" target="_blank"
+               style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.82rem;
+                      font-weight:600; color:#BE1E2D; text-decoration:none; background:#FFF5F5;
+                      border:1px solid #FECACA; border-radius:6px; padding:0.35rem 0.7rem;">
+                📝 Just had a meeting? Fill out this form!
+            </a>
         </div>
         """, unsafe_allow_html=True)
 
@@ -961,6 +969,28 @@ def show_deadlines_and_submissions(student):
         Program Manager can help if you're unsure what's expected for a given deadline.
     </div>
     """, unsafe_allow_html=True)
+
+    submission_portal = student.get("submission_portal") or ""
+    if submission_portal:
+        st.markdown(f"""
+        <div class="info-card" style="display:flex; align-items:center; justify-content:space-between;
+                                      flex-wrap:wrap; gap:0.75rem; margin-bottom:0.5rem;">
+            <div>
+                <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                            letter-spacing:0.05em; margin-bottom:0.3rem;">Submission Portal</div>
+                <div style="font-size:0.9rem; color:#475569;">
+                    Use this form to submit your deliverables for each deadline.
+                </div>
+            </div>
+            <a href="{submission_portal}" target="_blank"
+               style="display:inline-flex; align-items:center; gap:0.4rem;
+                      background:#BE1E2D; color:white; text-decoration:none;
+                      padding:0.5rem 1.1rem; border-radius:7px; font-size:0.88rem;
+                      font-weight:600; white-space:nowrap;">
+                Submit Here →
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
 
     EXCLUDED_TYPES = {"Syllabus", "Evaluation & Feedback"}
     all_deadlines = get_deadlines_for_student(student["name"])
