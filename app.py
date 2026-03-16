@@ -883,6 +883,38 @@ def show_student_profile_summary(student):
     </div>
     """, unsafe_allow_html=True)
 
+    # Syllabus
+    all_deadlines = get_deadlines_for_student(student["name"])
+    syllabus_dl = next((d for d in all_deadlines if d.get("type") == "Syllabus"), None)
+    syllabus_attachment = None
+    if syllabus_dl:
+        raw = syllabus_dl.get("submissions", {}).get("Syllabus Submission (From Mentor)")
+        if isinstance(raw, list) and raw:
+            syllabus_attachment = raw[0]
+        elif isinstance(raw, str) and raw.startswith("http"):
+            syllabus_attachment = {"url": raw, "filename": "Syllabus"}
+
+    if syllabus_attachment:
+        url = syllabus_attachment.get("url", "")
+        filename = syllabus_attachment.get("filename", "Syllabus")
+        st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="info-card">
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.5rem;">Program Syllabus</div>
+            <div style="font-size:0.92rem; color:#475569; line-height:1.55; margin-bottom:0.75rem;">
+                Here is the syllabus shared by your mentor — it outlines what you can expect
+                during your program, including key milestones, meeting expectations, and deliverables.
+            </div>
+            <a href="{url}" target="_blank"
+               style="display:inline-flex; align-items:center; gap:0.4rem; background:#F8F9FA;
+                      border:1px solid #E2E8F0; border-radius:6px; padding:0.45rem 0.85rem;
+                      font-size:0.88rem; font-weight:600; color:#BE1E2D; text-decoration:none;">
+                📄 {filename}
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
+
 # ──────────────────────────────────────────────
 # VIEW: Deadlines & Submissions
 # ──────────────────────────────────────────────
@@ -899,7 +931,9 @@ def show_deadlines_and_submissions(student):
     </div>
     """, unsafe_allow_html=True)
 
-    deadlines = get_deadlines_for_student(student["name"])
+    EXCLUDED_TYPES = {"Syllabus", "Evaluation & Feedback"}
+    all_deadlines = get_deadlines_for_student(student["name"])
+    deadlines = [d for d in all_deadlines if d.get("type") not in EXCLUDED_TYPES]
 
     if not deadlines:
         st.info("No deadlines found for your program yet.")
