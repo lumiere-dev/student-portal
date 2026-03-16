@@ -775,10 +775,15 @@ def show_dashboard():
         )
 
     # ── Student name header ──
-    st.markdown(
-        f'<p class="student-name-header">{student["name"]}</p>',
-        unsafe_allow_html=True
-    )
+    name_parts = [p.strip() for p in student["name"].split("|")]
+    header_name = name_parts[0]
+    header_sub = " · ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+    st.markdown(f"""
+    <div style="margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:1px solid #E2E8F0;">
+        <div style="font-size:1.5rem; font-weight:700; color:#1E293B; line-height:1.2;">{header_name}</div>
+        {"<div style='font-size:0.85rem; color:#94A3B8; margin-top:0.3rem;'>" + header_sub + "</div>" if header_sub else ""}
+    </div>
+    """, unsafe_allow_html=True)
 
     # ── Route to view ──
     if view == "Student Profile Summary":
