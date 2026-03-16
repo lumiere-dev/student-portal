@@ -796,6 +796,17 @@ def show_dashboard():
 
 def show_student_profile_summary(student):
     st.markdown("### Student Profile Summary")
+    st.markdown("""
+    <div style="background:#F8F9FA; border-left:4px solid #BE1E2D; border-radius:6px;
+                padding:0.85rem 1rem; margin-bottom:1.25rem; color:#475569; font-size:0.92rem; line-height:1.55;">
+        This is your at-a-glance overview of your research program. Here you can see your assigned mentor,
+        your revised final paper due date, how many mentor meetings you've completed, and the contact details
+        for your <strong>Program Manager</strong> and <strong>Writing Coach</strong>.<br><br>
+        Your <strong>Program Manager</strong> is your go-to point of contact — reach out to them if you need
+        help getting in touch with your mentor, want to flag a concern, or need support moving through any
+        roadblocks in your program.
+    </div>
+    """, unsafe_allow_html=True)
 
     mentor_name = student.get("mentor") or "Not yet assigned"
     revised_due = student.get("revised_final_paper_due", "")
@@ -863,6 +874,17 @@ def show_student_profile_summary(student):
 # ──────────────────────────────────────────────
 
 def show_deadlines_and_submissions(student):
+    st.markdown("### Deadlines & Submissions")
+    st.markdown("""
+    <div style="background:#F8F9FA; border-left:4px solid #BE1E2D; border-radius:6px;
+                padding:0.85rem 1rem; margin-bottom:1.25rem; color:#475569; font-size:0.92rem; line-height:1.55;">
+        This page tracks all of your program deadlines and submission statuses in one place.
+        Use it to stay on top of what's coming up, what you've already submitted, and anything
+        that may be overdue. <strong>Make sure to submit each deliverable on time</strong> — your
+        Program Manager can help if you're unsure what's expected for a given deadline.
+    </div>
+    """, unsafe_allow_html=True)
+
     deadlines = get_deadlines_for_student(student["name"])
 
     if not deadlines:
@@ -1124,6 +1146,16 @@ def show_mentor_info(student):
 
 def show_publication_program(student):
     st.markdown("### Publication Program")
+    st.markdown("""
+    <div style="background:#F8F9FA; border-left:4px solid #BE1E2D; border-radius:6px;
+                padding:0.85rem 1rem; margin-bottom:1.25rem; color:#475569; font-size:0.92rem; line-height:1.55;">
+        This page shows your publication journey. Your <strong>Publication Specialist</strong> will guide
+        you through the journal submission process — from selecting a target publication to navigating
+        reviewer feedback. Reach out to them directly with any questions about where or how to submit
+        your paper. Your <strong>Publication Target</strong> is the journal or outlet you're aiming for,
+        and <strong>Latest Publication Outcome</strong> reflects the most recent update on your submission.
+    </div>
+    """, unsafe_allow_html=True)
 
     specialist = student.get("publication_specialist") or "Not yet assigned"
     specialist_email = student.get("publication_specialist_email") or ""
@@ -1164,13 +1196,14 @@ def show_publication_program(student):
 
 def show_writing_center(student):
     st.markdown("### Writing Center")
-
     st.markdown("""
-    <div class="info-card">
-        <p>This is the interface for the Research Scholar Program Writing Center!</p>
-        <p>Here you'll find relevant resources from the writing center, including a link
-        to the writing center portal and any writing center workshops that have been
-        distributed as part of the program!</p>
+    <div style="background:#F8F9FA; border-left:4px solid #BE1E2D; border-radius:6px;
+                padding:0.85rem 1rem; margin-bottom:1.25rem; color:#475569; font-size:0.92rem; line-height:1.55;">
+        This is your hub for writing support throughout the program. Use the portal link below to
+        <strong>book a session or request written feedback</strong> from your Writing Coach — they can
+        help with structure, argumentation, citations, and polishing your paper. Writing Center
+        <strong>workshops</strong> are released starting in Week 4 and cover key academic writing skills,
+        so check back here regularly once your program is underway.
     </div>
     """, unsafe_allow_html=True)
 
