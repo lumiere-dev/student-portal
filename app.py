@@ -919,6 +919,37 @@ def show_student_profile_summary(student):
 # VIEW: Deadlines & Submissions
 # ──────────────────────────────────────────────
 
+@st.dialog("📋 Your Deadlines at a Glance")
+def show_deadlines_popup(overdue, upcoming):
+    if overdue:
+        st.markdown("#### ⚠️ Overdue")
+        for d in overdue:
+            st.markdown(f"""
+            <div style="background:rgba(239,68,68,0.08); border:1px solid #EF4444;
+                        border-radius:8px; padding:0.6rem 0.9rem; margin-bottom:0.5rem;">
+                <div style="font-weight:600; color:#DC2626;">{d['type']}</div>
+                <div style="font-size:0.85rem; color:#475569;">Was due {format_date(d['due_date'])}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    if upcoming:
+        st.markdown("#### ⏰ Coming Up")
+        for d in upcoming[:3]:
+            days_left = (datetime.strptime(d["due_date"], "%Y-%m-%d") - datetime.now()).days
+            st.markdown(f"""
+            <div style="background:rgba(190,30,45,0.06); border:1px solid #BE1E2D;
+                        border-radius:8px; padding:0.6rem 0.9rem; margin-bottom:0.5rem;">
+                <div style="font-weight:600; color:#1E293B;">{d['type']}</div>
+                <div style="font-size:0.85rem; color:#475569;">
+                    Due {format_date(d['due_date'])} —
+                    <strong>{days_left} day{"s" if days_left != 1 else ""} away</strong>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    if st.button("Got it", use_container_width=True, type="primary"):
+        st.rerun()
+
 def show_deadlines_and_submissions(student):
     st.markdown("### Deadlines & Submissions")
     st.markdown("""
@@ -938,6 +969,20 @@ def show_deadlines_and_submissions(student):
     if not deadlines:
         st.info("No deadlines found for your program yet.")
         return
+
+    # ── Auto-open popup once per page visit ──
+    popup_key = f"deadlines_popup_shown_{student['name']}"
+    if not st.session_state.get(popup_key):
+        st.session_state[popup_key] = True
+        now = datetime.now()
+        pending = [d for d in deadlines if d["status"] != "Submitted" and d["due_date"]]
+        overdue_items = [d for d in pending if datetime.strptime(d["due_date"], "%Y-%m-%d") < now]
+        upcoming_items = sorted(
+            [d for d in pending if datetime.strptime(d["due_date"], "%Y-%m-%d") >= now],
+            key=lambda x: x["due_date"]
+        )
+        if overdue_items or upcoming_items:
+            show_deadlines_popup(overdue_items, upcoming_items)
 
     # ── Summary bar ──
     total = len(deadlines)
