@@ -732,7 +732,7 @@ def show_dashboard():
 
     # ── Sidebar ──
     with st.sidebar:
-        st.image("assets/logo.png", width=80)
+        st.image("assets/logo_symbol.png", width=80)
         st.markdown(f"### Welcome, {display_name}")
         st.markdown(f'<p style="color:#FFFFFF; font-size:0.85rem; margin-top:-0.75rem;">{st.session_state.student_email}</p>', unsafe_allow_html=True)
 
