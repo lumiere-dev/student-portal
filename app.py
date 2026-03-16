@@ -116,6 +116,7 @@ def send_magic_link(email, student_name):
 STUDENT_FIELDS = {
     "name": "Student Cohort Application Tracker",
     "mentor": "Mentor Name_Text",
+    "mentor_email": "Mentor Email",
     "research_area": "Research Area - First Preference",
     "city": "City of Residence",
     "graduation_year": "Graduation Year",
@@ -467,6 +468,7 @@ def get_student_by_email(email):
                 "city": fields.get(STUDENT_FIELDS["city"], ""),
                 "graduation_year": fields.get(STUDENT_FIELDS["graduation_year"], ""),
                 "mentor": fields.get(STUDENT_FIELDS["mentor"], ""),
+                "mentor_email": unwrap(fields.get(STUDENT_FIELDS["mentor_email"], "")),
                 "mentor_confirmation": fields.get(STUDENT_FIELDS["mentor_confirmation"], ""),
                 "background_shared": fields.get(STUDENT_FIELDS["background_shared"], ""),
                 "expected_meetings": fields.get(STUDENT_FIELDS["expected_meetings"], 0),
@@ -814,6 +816,8 @@ def show_student_profile_summary(student):
     """, unsafe_allow_html=True)
 
     mentor_name = student.get("mentor") or "Not yet assigned"
+    mentor_email = student.get("mentor_email") or ""
+    mentor_email_html = f'<a href="mailto:{mentor_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{mentor_email}</a>' if mentor_email else ""
     revised_due = student.get("revised_final_paper_due", "")
     completed = student.get("completed_meetings", 0) or 0
     expected = student.get("expected_meetings", 0) or 0
@@ -833,7 +837,8 @@ def show_student_profile_summary(student):
         <div>
             <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.2rem;">Your Mentor</div>
-            <div style="font-size:1.15rem; font-weight:700; color:#1E293B;">{mentor_name}</div>
+            <div style="font-size:1.15rem; font-weight:700; color:#1E293B; margin-bottom:0.2rem;">{mentor_name}</div>
+            {mentor_email_html}
         </div>
     </div>
     """, unsafe_allow_html=True)
