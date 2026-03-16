@@ -819,16 +819,17 @@ def show_student_profile_summary(student):
     progress_label = f"{completed} of {expected} meetings completed" if expected > 0 else "No meetings scheduled yet"
     pm_email_html = f'<a href="mailto:{pm_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{pm_email}</a>' if pm_email else ""
 
-    # Mentor banner — full width
+    # Mentor card — understated
     st.markdown(f"""
-    <div style="background:linear-gradient(135deg, #BE1E2D 0%, #8B1520 100%);
-                border-radius:12px; padding:1.5rem 2rem; color:white; margin-bottom:1rem;
-                display:flex; align-items:center; justify-content:space-between;">
+    <div class="info-card" style="margin-bottom:1rem; display:flex; align-items:center; gap:1rem;">
+        <div style="background:#F1F5F9; border-radius:50%; width:44px; height:44px; flex-shrink:0;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:1.2rem; color:#64748B;">👤</div>
         <div>
-            <div style="font-size:0.78rem; opacity:0.8; text-transform:uppercase; letter-spacing:0.06em;">Your Mentor</div>
-            <div style="font-size:1.6rem; font-weight:700; margin-top:0.2rem;">{mentor_name}</div>
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.2rem;">Your Mentor</div>
+            <div style="font-size:1.15rem; font-weight:700; color:#1E293B;">{mentor_name}</div>
         </div>
-        <div style="font-size:2.5rem; opacity:0.25;">👤</div>
     </div>
     """, unsafe_allow_html=True)
 
