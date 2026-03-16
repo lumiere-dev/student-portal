@@ -801,7 +801,7 @@ def show_student_profile_summary(student):
                 padding:0.85rem 1rem; margin-bottom:1.25rem; color:#475569; font-size:0.92rem; line-height:1.55;">
         This is your at-a-glance overview of your research program. Here you can see your assigned mentor,
         your revised final paper due date, how many mentor meetings you've completed, and the contact details
-        for your <strong>Program Manager</strong> and <strong>Writing Coach</strong>.<br><br>
+        for your <strong>Program Manager</strong>.<br><br>
         Your <strong>Program Manager</strong> is your go-to point of contact — reach out to them if you need
         help getting in touch with your mentor, want to flag a concern, or need support moving through any
         roadblocks in your program.
@@ -814,13 +814,10 @@ def show_student_profile_summary(student):
     expected = student.get("expected_meetings", 0) or 0
     pm_name = student.get("program_manager_name") or "Not assigned"
     pm_email = student.get("program_manager_email") or ""
-    wc_name = student.get("writing_coach_name") or "Not assigned"
-    wc_email = student.get("writing_coach_email") or ""
 
     pct = int(min(completed / expected, 1.0) * 100) if expected > 0 else 0
     progress_label = f"{completed} of {expected} meetings completed" if expected > 0 else "No meetings scheduled yet"
     pm_email_html = f'<a href="mailto:{pm_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{pm_email}</a>' if pm_email else ""
-    wc_email_html = f'<a href="mailto:{wc_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{wc_email}</a>' if wc_email else ""
 
     # Mentor banner — full width
     st.markdown(f"""
@@ -862,34 +859,18 @@ def show_student_profile_summary(student):
 
     st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
 
-    # Program Manager + Writing Coach side by side
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown(f"""
-        <div class="info-card">
-            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
-                        letter-spacing:0.05em; margin-bottom:0.5rem;">Program Manager</div>
-            <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.25rem;">{pm_name}</div>
-            {pm_email_html}
-            <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.5rem; line-height:1.4;">
-                Your main point of contact for program support and escalations.
-            </div>
+    # Program Manager
+    st.markdown(f"""
+    <div class="info-card">
+        <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                    letter-spacing:0.05em; margin-bottom:0.5rem;">Program Manager</div>
+        <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.25rem;">{pm_name}</div>
+        {pm_email_html}
+        <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.5rem; line-height:1.4;">
+            Your main point of contact for program support and escalations.
         </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-        st.markdown(f"""
-        <div class="info-card">
-            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
-                        letter-spacing:0.05em; margin-bottom:0.5rem;">Writing Coach</div>
-            <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.25rem;">{wc_name}</div>
-            {wc_email_html}
-            <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.5rem; line-height:1.4;">
-                Available for feedback on drafts, structure, and academic writing.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: Deadlines & Submissions
@@ -1226,6 +1207,23 @@ def show_writing_center(student):
         help with structure, argumentation, citations, and polishing your paper. Writing Center
         <strong>workshops</strong> are released starting in Week 4 and cover key academic writing skills,
         so check back here regularly once your program is underway.
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Writing Coach card
+    wc_name = student.get("writing_coach_name") or "Not assigned"
+    wc_email = student.get("writing_coach_email") or ""
+    wc_email_html = f'<a href="mailto:{wc_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{wc_email}</a>' if wc_email else ""
+    st.markdown(f"""
+    <div style="background:linear-gradient(135deg, #BE1E2D 0%, #8B1520 100%);
+                border-radius:12px; padding:1.5rem 2rem; color:white; margin-bottom:1rem;
+                display:flex; align-items:center; justify-content:space-between;">
+        <div>
+            <div style="font-size:0.78rem; opacity:0.8; text-transform:uppercase; letter-spacing:0.06em;">Your Writing Coach</div>
+            <div style="font-size:1.6rem; font-weight:700; margin-top:0.2rem;">{wc_name}</div>
+            {"<div style='font-size:0.9rem; opacity:0.85; margin-top:0.3rem;'>" + wc_email + "</div>" if wc_email else ""}
+        </div>
+        <div style="font-size:2.5rem; opacity:0.25;">✍️</div>
     </div>
     """, unsafe_allow_html=True)
 
