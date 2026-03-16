@@ -817,34 +817,50 @@ def show_student_profile_summary(student):
     wc_name = student.get("writing_coach_name") or "Not assigned"
     wc_email = student.get("writing_coach_email") or ""
 
-    # Mentor banner card
+    pct = int(min(completed / expected, 1.0) * 100) if expected > 0 else 0
+    progress_label = f"{completed} of {expected} meetings completed" if expected > 0 else "No meetings scheduled yet"
+    pm_email_html = f'<a href="mailto:{pm_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{pm_email}</a>' if pm_email else ""
+    wc_email_html = f'<a href="mailto:{wc_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{wc_email}</a>' if wc_email else ""
+
+    # Mentor banner — full width
     st.markdown(f"""
     <div style="background:linear-gradient(135deg, #BE1E2D 0%, #8B1520 100%);
-                border-radius:12px; padding:2rem; color:white; margin-bottom:1.5rem;">
-        <div style="font-size:0.85rem; opacity:0.9;">Your Mentor</div>
-        <div style="font-size:1.8rem; font-weight:700; margin-top:0.25rem;">{mentor_name}</div>
+                border-radius:12px; padding:1.5rem 2rem; color:white; margin-bottom:1rem;
+                display:flex; align-items:center; justify-content:space-between;">
+        <div>
+            <div style="font-size:0.78rem; opacity:0.8; text-transform:uppercase; letter-spacing:0.06em;">Your Mentor</div>
+            <div style="font-size:1.6rem; font-weight:700; margin-top:0.2rem;">{mentor_name}</div>
+        </div>
+        <div style="font-size:2.5rem; opacity:0.25;">👤</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Revised paper due date
-    st.markdown(f"""
-    <div class="info-card">
-        <div style="font-size:0.85rem; color:#64748B;">Revised Final Paper Due Date</div>
-        <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{format_date(revised_due)}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Due date + Meetings progress side by side
+    col_a, col_b = st.columns(2)
 
-    # Meetings progress
-    st.markdown("""
-    <div class="info-card">
-        <div style="font-size:0.85rem; color:#64748B; margin-bottom:0.5rem;">Meetings Progress</div>
-    """, unsafe_allow_html=True)
-    if expected > 0:
-        st.progress(min(completed / expected, 1.0))
-        st.caption(f"{completed} of {expected} meetings completed")
-    else:
-        st.caption("No meetings scheduled yet")
-    st.markdown("</div>", unsafe_allow_html=True)
+    with col_a:
+        st.markdown(f"""
+        <div class="info-card" style="height:100%;">
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.4rem;">Revised Final Paper Due</div>
+            <div style="font-size:1.25rem; font-weight:700; color:#1E293B;">{format_date(revised_due)}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_b:
+        st.markdown(f"""
+        <div class="info-card" style="height:100%;">
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.75rem;">Meetings Progress</div>
+            <div style="background:#E2E8F0; border-radius:999px; height:8px; margin-bottom:0.55rem;">
+                <div style="background:linear-gradient(90deg, #BE1E2D, #8B1520); width:{pct}%;
+                            height:100%; border-radius:999px; transition:width 0.3s;"></div>
+            </div>
+            <div style="font-size:0.88rem; color:#475569;">{progress_label}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
 
     # Program Manager + Writing Coach side by side
     col1, col2 = st.columns(2)
@@ -854,8 +870,11 @@ def show_student_profile_summary(student):
         <div class="info-card">
             <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.5rem;">Program Manager</div>
-            <div style="font-size:1rem; font-weight:600; color:#1E293B;">{pm_name}</div>
-            {"<div style='font-size:0.88rem; color:#64748B; margin-top:0.2rem;'>" + pm_email + "</div>" if pm_email else ""}
+            <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.25rem;">{pm_name}</div>
+            {pm_email_html}
+            <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.5rem; line-height:1.4;">
+                Your main point of contact for program support and escalations.
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -864,8 +883,11 @@ def show_student_profile_summary(student):
         <div class="info-card">
             <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.5rem;">Writing Coach</div>
-            <div style="font-size:1rem; font-weight:600; color:#1E293B;">{wc_name}</div>
-            {"<div style='font-size:0.88rem; color:#64748B; margin-top:0.2rem;'>" + wc_email + "</div>" if wc_email else ""}
+            <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.25rem;">{wc_name}</div>
+            {wc_email_html}
+            <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.5rem; line-height:1.4;">
+                Available for feedback on drafts, structure, and academic writing.
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
