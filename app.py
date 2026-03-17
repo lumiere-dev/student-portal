@@ -1575,6 +1575,47 @@ def show_resources(student):
     </div>
     """, unsafe_allow_html=True)
 
+    # ── Deadline-specific resources ──
+    st.markdown("---")
+    st.markdown("#### Deadline Resources")
+    st.markdown(
+        '<p style="font-size:0.88rem; color:#64748B; margin-bottom:1rem;">Reference guides for each stage of your program.</p>',
+        unsafe_allow_html=True
+    )
+
+    # Canonical order; variants like Research Outline/Paper Outline are intentionally omitted (same URL)
+    canonical_deadline_keys = [
+        "Research Question",
+        "Research Proposal",
+        "Research Paper Outline",
+        "Milestone",
+        "Revised Final Paper",
+    ]
+
+    for key in canonical_deadline_keys:
+        links = GUIDEBOOK_LINKS.get(key, [])
+        helper = GUIDEBOOK_HELPER.get(key, "")
+        if not links:
+            continue
+        buttons_html = " ".join(
+            f'<a href="{url}" target="_blank"'
+            f'   style="display:inline-flex; align-items:center; gap:0.4rem;'
+            f'          background:#BE1E2D; color:white; text-decoration:none;'
+            f'          padding:0.45rem 1rem; border-radius:7px; font-size:0.85rem;'
+            f'          font-weight:600; white-space:nowrap; margin-top:0.25rem;">'
+            f'    {title} →'
+            f'</a>'
+            for title, url in links
+        )
+        st.markdown(f"""
+        <div class="info-card" style="margin-bottom:0.85rem;">
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.3rem;">{key}</div>
+            <div style="font-size:0.88rem; color:#475569; margin-bottom:0.5rem;">{helper}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">{buttons_html}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
 # ──────────────────────────────────────────────
 # MAIN
 # ──────────────────────────────────────────────
