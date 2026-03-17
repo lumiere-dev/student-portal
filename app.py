@@ -196,6 +196,18 @@ GUIDEBOOK_LINKS = {
 }
 
 
+GUIDEBOOK_HELPER = {
+    "Research Question": "Start here — this guide walks you through scoping and refining your research question.",
+    "Research Proposal": "Covers what to include and how to structure your proposal before submitting.",
+    "Research Outline": "Follow this template when building out the outline for your paper.",
+    "Paper Outline": "Follow this template when building out the outline for your paper.",
+    "Research Paper Outline": "Follow this template when building out the outline for your paper.",
+    "Milestone": "What to include in your milestone submission and how it will be reviewed.",
+    "Revised Final Paper": "Editing tips and paper formatting requirements to review before your final submission.",
+    "First Draft": "Before you submit, make sure your citations are correctly formatted.",
+}
+
+
 def get_guidebook_links(dtype):
     """Return guidebook links for a deadline type, with prefix fallback for variants like 'Milestone 1'."""
     if dtype in GUIDEBOOK_LINKS:
@@ -204,6 +216,16 @@ def get_guidebook_links(dtype):
         if dtype.startswith(key):
             return links
     return []
+
+
+def get_guidebook_helper(dtype):
+    """Return helper text for a deadline type, with prefix fallback."""
+    if dtype in GUIDEBOOK_HELPER:
+        return GUIDEBOOK_HELPER[dtype]
+    for key, text in GUIDEBOOK_HELPER.items():
+        if dtype.startswith(key):
+            return text
+    return "Helpful reference for this deadline."
 
 # ──────────────────────────────────────────────
 # Custom CSS — Lumiere Brand Theme
@@ -1135,8 +1157,7 @@ def show_deadlines_and_submissions(student):
 
             with col1:
                 if guidebook_links:
-                    plural = len(guidebook_links) > 1
-                    guide_word = "these guides" if plural else "this guide"
+                    helper_text = get_guidebook_helper(dtype)
                     links_html = " &nbsp;·&nbsp; ".join(
                         f'<a href="{url}" target="_blank" style="color:#BE1E2D; font-weight:600; text-decoration:none; white-space:nowrap;">{title} →</a>'
                         for title, url in guidebook_links
@@ -1145,7 +1166,7 @@ def show_deadlines_and_submissions(student):
                         f"{icon} **{dtype}**"
                         f'<div style="margin-top:0.45rem; background:#FFF5F5; border:1px solid #FECACA;'
                         f'border-radius:8px; padding:0.45rem 0.7rem; display:inline-block; max-width:100%;">'
-                        f'<span style="font-size:0.78rem; color:#64748B;">📖 Use {guide_word} for reference while working on your <strong>{dtype}</strong>: &nbsp;</span>'
+                        f'<span style="font-size:0.78rem; color:#64748B;">📖 {helper_text} &nbsp;</span>'
                         f'{links_html}'
                         f'</div>',
                         unsafe_allow_html=True
