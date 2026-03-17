@@ -1194,7 +1194,7 @@ def show_deadlines_and_submissions(student):
 
 def _render_submission_value(value, label=None):
     """Render a submission value — attachment list, URL, or plain text."""
-    prefix = f'<span style="font-size:0.82rem; color:#64748B; font-weight:500;">{label}: </span>' if label else ""
+    prefix = f'<span style="font-size:1rem; color:#64748B; font-weight:500;">{label}: </span>' if label else ""
     if isinstance(value, list):
         for item in value:
             if isinstance(item, dict):
