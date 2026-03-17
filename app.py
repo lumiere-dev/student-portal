@@ -1125,14 +1125,25 @@ def show_deadlines_and_submissions(student):
 
         with st.container():
             guidebook_links = get_guidebook_links(dtype)
-            if guidebook_links:
-                col1, col2, col3, col4 = st.columns([2, 1, 1, 0.6])
-            else:
-                col1, col2, col3 = st.columns([2, 1, 1])
-                col4 = None
+            col1, col2, col3 = st.columns([2, 1, 1])
 
             with col1:
-                st.markdown(f"{icon} **{dtype}**")
+                if guidebook_links:
+                    plural = len(guidebook_links) > 1
+                    links_html = " &nbsp;·&nbsp; ".join(
+                        f'<a href="{url}" target="_blank" style="color:#BE1E2D; font-weight:600; text-decoration:none;">{title} →</a>'
+                        for title, url in guidebook_links
+                    )
+                    guide_word = "these guides" if plural else "this guide"
+                    st.markdown(
+                        f"{icon} **{dtype}**"
+                        f'<div style="margin-top:0.3rem; font-size:0.82rem; color:#64748B; line-height:1.5;">'
+                        f'Use {guide_word} for reference while working on your {dtype}! {links_html}'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.markdown(f"{icon} **{dtype}**")
 
             with col2:
                 st.markdown(f"**Due:** {format_date(dl['due_date'])}")
@@ -1144,13 +1155,6 @@ def show_deadlines_and_submissions(student):
                     st.error("Overdue")
                 else:
                     st.warning("Not Submitted")
-
-            if col4 and guidebook_links:
-                with col4:
-                    with st.popover("📖"):
-                        st.markdown("**Guidebook Resources**")
-                        for title, url in guidebook_links:
-                            st.markdown(f"[{title} →]({url})")
 
             if dl.get("submissions"):
                 for field_name, value in dl["submissions"].items():
