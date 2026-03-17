@@ -1186,31 +1186,31 @@ def show_deadlines_and_submissions(student):
                     st.warning("Not Submitted")
 
             if dl.get("submissions"):
-                st.markdown('<span style="font-size:0.85rem; color:#64748B;">Your submission: </span>', unsafe_allow_html=True)
                 for field_name, value in dl["submissions"].items():
-                    _render_submission_value(value)
+                    _render_submission_value(value, label="Your submission")
 
         st.markdown("---")
 
 
-def _render_submission_value(value):
+def _render_submission_value(value, label=None):
     """Render a submission value — attachment list, URL, or plain text."""
+    prefix = f'<span style="font-size:0.82rem; color:#64748B; font-weight:500;">{label}: </span>' if label else ""
     if isinstance(value, list):
         for item in value:
             if isinstance(item, dict):
                 url = item.get("url", "")
                 filename = item.get("filename", "Download")
                 if url:
-                    st.markdown(f"[{filename}]({url})")
+                    st.markdown(f'{prefix}<a href="{url}" target="_blank">{filename}</a>', unsafe_allow_html=True)
             else:
-                st.markdown(f"{item}")
+                st.markdown(f"{prefix}{item}", unsafe_allow_html=True)
     elif isinstance(value, str):
         if value.startswith("http"):
-            st.markdown(f"[View Submission]({value})")
+            st.markdown(f'{prefix}<a href="{value}" target="_blank">View Submission</a>', unsafe_allow_html=True)
         else:
-            st.markdown(value)
+            st.markdown(f"{prefix}{value}", unsafe_allow_html=True)
     else:
-        st.markdown(str(value))
+        st.markdown(f"{prefix}{value}", unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: My Profile
