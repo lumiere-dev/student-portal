@@ -1136,15 +1136,17 @@ def show_deadlines_and_submissions(student):
             with col1:
                 if guidebook_links:
                     plural = len(guidebook_links) > 1
+                    guide_word = "these guides" if plural else "this guide"
                     links_html = " &nbsp;·&nbsp; ".join(
-                        f'<a href="{url}" target="_blank" style="color:#BE1E2D; font-weight:600; text-decoration:none;">{title} →</a>'
+                        f'<a href="{url}" target="_blank" style="color:#BE1E2D; font-weight:600; text-decoration:none; white-space:nowrap;">{title} →</a>'
                         for title, url in guidebook_links
                     )
-                    guide_word = "these guides" if plural else "this guide"
                     st.markdown(
                         f"{icon} **{dtype}**"
-                        f'<div style="margin-top:0.3rem; font-size:0.82rem; color:#64748B; line-height:1.5;">'
-                        f'Use {guide_word} for reference while working on your {dtype}! {links_html}'
+                        f'<div style="margin-top:0.45rem; background:#FFF5F5; border:1px solid #FECACA;'
+                        f'border-radius:8px; padding:0.45rem 0.7rem; display:inline-block; max-width:100%;">'
+                        f'<span style="font-size:0.78rem; color:#64748B;">📖 Use {guide_word} for reference while working on your <strong>{dtype}</strong>: &nbsp;</span>'
+                        f'{links_html}'
                         f'</div>',
                         unsafe_allow_html=True
                     )
