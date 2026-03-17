@@ -166,6 +166,39 @@ SUBMISSION_FIELDS = [
     "Target Publication Submission",
 ]
 
+# Maps deadline types to guidebook resource links (title, url)
+GUIDEBOOK_LINKS = {
+    "Research Question": [
+        ("Developing a Research Question", "https://misty-music-eb4.notion.site/Developing-a-Research-Question-dd1ab52205aa43998da57cc7fd44f8df"),
+    ],
+    "Research Proposal": [
+        ("Research Proposal Format", "https://misty-music-eb4.notion.site/Research-Proposal-Format-cb4908948dad4d0ca4a065b3e14e8c66"),
+    ],
+    "Research Outline": [
+        ("Paper Outline Format", "https://misty-music-eb4.notion.site/Paper-Outline-Format-8dff9c11b8a0428b9ff8b3d59fbfde94"),
+    ],
+    "Paper Outline": [
+        ("Paper Outline Format", "https://misty-music-eb4.notion.site/Paper-Outline-Format-8dff9c11b8a0428b9ff8b3d59fbfde94"),
+    ],
+    "Milestone": [
+        ("Milestone Submissions", "https://misty-music-eb4.notion.site/Milestone-Submissions-33235699f82c4cf88e640d830799b24e"),
+    ],
+    "Final Paper": [
+        ("Editing & Revising Guide", "https://misty-music-eb4.notion.site/Editing-Revising-Guide-05fa87864bde44a3b634a64fd5be7c9c"),
+        ("Final Research Paper Guide", "https://misty-music-eb4.notion.site/Final-Research-Paper-35b244db93284cf399bae728956e1e9a"),
+    ],
+}
+
+
+def get_guidebook_links(dtype):
+    """Return guidebook links for a deadline type, with prefix fallback for variants like 'Milestone 1'."""
+    if dtype in GUIDEBOOK_LINKS:
+        return GUIDEBOOK_LINKS[dtype]
+    for key, links in GUIDEBOOK_LINKS.items():
+        if dtype.startswith(key):
+            return links
+    return []
+
 # ──────────────────────────────────────────────
 # Custom CSS — Lumiere Brand Theme
 # ──────────────────────────────────────────────
@@ -549,6 +582,9 @@ def check_magic_link_token():
                 st.session_state.is_preview = False
                 st.query_params.clear()
                 st.rerun()
+            else:
+                st.error("No account found for this email. Please contact your program manager.")
+                st.query_params.clear()
         else:
             st.error("This login link has expired or is invalid. Please request a new one.")
             st.query_params.clear()
@@ -698,7 +734,8 @@ def show_login_page():
                 preview_submitted = st.form_submit_button("Preview as Student", use_container_width=True)
 
                 if preview_submitted and preview_email:
-                    student = get_student_by_email(preview_email)
+                    with st.spinner("Loading student..."):
+                        student = get_student_by_email(preview_email)
                     if student:
                         st.session_state.authenticated = True
                         st.session_state.student_name = student["name"]
@@ -752,6 +789,7 @@ def show_dashboard():
                 "Deadlines & Submissions",
                 "Publication Program",
                 "Writing Center",
+                "Resources",
             ],
             label_visibility="collapsed"
         )
@@ -798,6 +836,8 @@ def show_dashboard():
         show_publication_program(student)
     elif view == "Writing Center":
         show_writing_center(student)
+    elif view == "Resources":
+        show_resources(student)
 
 # ──────────────────────────────────────────────
 # VIEW: Student Profile Summary
@@ -1084,7 +1124,12 @@ def show_deadlines_and_submissions(student):
             icon = "📅"
 
         with st.container():
-            col1, col2, col3 = st.columns([2, 1, 1])
+            guidebook_links = get_guidebook_links(dtype)
+            if guidebook_links:
+                col1, col2, col3, col4 = st.columns([2, 1, 1, 0.6])
+            else:
+                col1, col2, col3 = st.columns([2, 1, 1])
+                col4 = None
 
             with col1:
                 st.markdown(f"{icon} **{dtype}**")
@@ -1099,6 +1144,13 @@ def show_deadlines_and_submissions(student):
                     st.error("Overdue")
                 else:
                     st.warning("Not Submitted")
+
+            if col4 and guidebook_links:
+                with col4:
+                    with st.popover("📖"):
+                        st.markdown("**Guidebook Resources**")
+                        for title, url in guidebook_links:
+                            st.markdown(f"[{title} →]({url})")
 
             if dl.get("submissions"):
                 for field_name, value in dl["submissions"].items():
@@ -1367,6 +1419,126 @@ def show_writing_center(student):
         for the program!</p>
         <p>Workshops begin at the start of week 4, so be sure to check this page
         weekly starting then!</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ──────────────────────────────────────────────
+# VIEW: Resources
+# ──────────────────────────────────────────────
+
+def show_resources(student):
+    st.markdown("### Resources")
+    st.markdown("""
+    <div style="background:#F8F9FA; border-left:4px solid #BE1E2D; border-radius:6px;
+                padding:0.85rem 1rem; margin-bottom:1.5rem; color:#475569; font-size:0.92rem; line-height:1.55;">
+        Everything you need for your research program — all in one place.
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Guidebook ──
+    st.markdown(f"""
+    <div class="info-card" style="display:flex; align-items:center; justify-content:space-between;
+                                  flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+        <div>
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.3rem;">Program Guidebook</div>
+            <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.2rem;">
+                Lumiere Research Scholar Guidebook
+            </div>
+            <div style="font-size:0.88rem; color:#475569;">
+                Your complete guide to the Lumiere Research Scholar Program — covering expectations,
+                timelines, deliverables, and tips for getting the most out of your experience.
+            </div>
+        </div>
+        <a href="https://misty-music-eb4.notion.site/Lumiere-Research-Scholar-Guidebook-3c3dd9d9b32745c6971c50908db9b549"
+           target="_blank"
+           style="display:inline-flex; align-items:center; gap:0.4rem;
+                  background:#BE1E2D; color:white; text-decoration:none;
+                  padding:0.5rem 1.1rem; border-radius:7px; font-size:0.88rem;
+                  font-weight:600; white-space:nowrap;">
+            Open Guidebook →
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Submission Portal ──
+    submission_portal = student.get("submission_portal") or ""
+    if submission_portal:
+        st.markdown(f"""
+        <div class="info-card" style="display:flex; align-items:center; justify-content:space-between;
+                                      flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+            <div>
+                <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                            letter-spacing:0.05em; margin-bottom:0.3rem;">Submission Portal</div>
+                <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.2rem;">
+                    Submit Your Deliverables
+                </div>
+                <div style="font-size:0.88rem; color:#475569;">
+                    Use this form to submit your deliverables — research question, proposal,
+                    outline, milestones, and final paper. Submit each piece by its due date
+                    as shown on the Deadlines &amp; Submissions page.
+                </div>
+            </div>
+            <a href="{submission_portal}" target="_blank"
+               style="display:inline-flex; align-items:center; gap:0.4rem;
+                      background:#BE1E2D; color:white; text-decoration:none;
+                      padding:0.5rem 1.1rem; border-radius:7px; font-size:0.88rem;
+                      font-weight:600; white-space:nowrap;">
+                Submit Here →
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── Weekly Update Form ──
+    st.markdown(f"""
+    <div class="info-card" style="display:flex; align-items:center; justify-content:space-between;
+                                  flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+        <div>
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.3rem;">Weekly Meeting Update</div>
+            <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.2rem;">
+                Meeting Update Form
+            </div>
+            <div style="font-size:0.88rem; color:#475569;">
+                Fill this out after every mentor meeting to log your progress, discussion notes,
+                and next steps. This keeps your Program Manager in the loop and counts toward
+                your completed meetings tally.
+            </div>
+        </div>
+        <a href="https://airtable.com/appK9HemdsQBzVefU/shrMUNFRb6lEQwHfk" target="_blank"
+           style="display:inline-flex; align-items:center; gap:0.4rem;
+                  background:#BE1E2D; color:white; text-decoration:none;
+                  padding:0.5rem 1.1rem; border-radius:7px; font-size:0.88rem;
+                  font-weight:600; white-space:nowrap;">
+            Open Form →
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Citations ──
+    st.markdown(f"""
+    <div class="info-card" style="display:flex; align-items:center; justify-content:space-between;
+                                  flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;">
+        <div>
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.3rem;">Writing Guide</div>
+            <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.2rem;">
+                Citations 101
+            </div>
+            <div style="font-size:0.88rem; color:#475569;">
+                A guide to citing your sources correctly. Use this whenever you're writing your
+                research proposal, outline, or paper — proper citations are required for all
+                written submissions.
+            </div>
+        </div>
+        <a href="https://misty-music-eb4.notion.site/Citations-101-3211af35f82f4eb7a7a2f6fd6125b9e7"
+           target="_blank"
+           style="display:inline-flex; align-items:center; gap:0.4rem;
+                  background:#BE1E2D; color:white; text-decoration:none;
+                  padding:0.5rem 1.1rem; border-radius:7px; font-size:0.88rem;
+                  font-weight:600; white-space:nowrap;">
+            Open Guide →
+        </a>
     </div>
     """, unsafe_allow_html=True)
 
