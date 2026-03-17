@@ -180,12 +180,18 @@ GUIDEBOOK_LINKS = {
     "Paper Outline": [
         ("Paper Outline Format", "https://misty-music-eb4.notion.site/Paper-Outline-Format-8dff9c11b8a0428b9ff8b3d59fbfde94"),
     ],
+    "Research Paper Outline": [
+        ("Paper Outline Format", "https://misty-music-eb4.notion.site/Paper-Outline-Format-8dff9c11b8a0428b9ff8b3d59fbfde94"),
+    ],
     "Milestone": [
         ("Milestone Submissions", "https://misty-music-eb4.notion.site/Milestone-Submissions-33235699f82c4cf88e640d830799b24e"),
     ],
-    "Final Paper": [
+    "Revised Final Paper": [
         ("Editing & Revising Guide", "https://misty-music-eb4.notion.site/Editing-Revising-Guide-05fa87864bde44a3b634a64fd5be7c9c"),
         ("Final Research Paper Guide", "https://misty-music-eb4.notion.site/Final-Research-Paper-35b244db93284cf399bae728956e1e9a"),
+    ],
+    "First Draft": [
+        ("Citations 101", "https://misty-music-eb4.notion.site/Citations-101-3211af35f82f4eb7a7a2f6fd6125b9e7"),
     ],
 }
 
