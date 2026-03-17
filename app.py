@@ -1186,6 +1186,7 @@ def show_deadlines_and_submissions(student):
                     st.warning("Not Submitted")
 
             if dl.get("submissions"):
+                st.markdown('<span style="font-size:0.85rem; color:#64748B;">Your submission: </span>', unsafe_allow_html=True)
                 for field_name, value in dl["submissions"].items():
                     _render_submission_value(value)
 
