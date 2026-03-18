@@ -1441,23 +1441,18 @@ def show_publication_program(student):
 
     # Debug panel (preview/admin mode only)
     if st.session_state.get("is_preview"):
-        with st.expander("Debug: Publication Base data", expanded=False):
-            st.write("**tracker_value (lookup key):**", student.get("name", ""))
-            st.write("**publication_marker:**", student.get("publication_marker", []))
-            pub_fields = {
-                "publication_specialist": specialist,
-                "publication_specialist_email": specialist_email,
-                "publication_target": target,
-                "publication_outcome": outcome,
-                "target_submission_workshop": submission_workshop,
-                "target_intro_workshop": intro_workshop,
-                "target_one_pager": one_pager,
-                "target_website_link": website_link,
-                "quiz_1_status": quiz_1,
-                "quiz_2_status": quiz_2,
-                "quiz_3_status": quiz_3,
-            }
-            st.json(pub_fields)
+        with st.expander("Debug: Publication Base lookup", expanded=True):
+            tracker_value = student.get("name", "")
+            pub_marker = student.get("publication_marker", [])
+            st.write("**Tracker value (FIND key):**", tracker_value)
+            st.write("**Publication marker:**", pub_marker)
+
+            raw_record = get_student_publication_record(tracker_value)
+            if raw_record:
+                st.success("Record found in publication base.")
+                st.json(raw_record.get("fields", {}))
+            else:
+                st.error("No record found in publication base for this tracker value.")
 
     # Publication Specialist card
     specialist_email_line = f'<a href="mailto:{specialist_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{specialist_email}</a>' if specialist_email else ""
