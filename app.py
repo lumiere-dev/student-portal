@@ -1428,7 +1428,21 @@ def show_publication_program(student):
     specialist = student.get("publication_specialist") or "Not yet assigned"
     specialist_email = student.get("publication_specialist_email") or ""
     target = student.get("publication_target") or "Not yet set"
-    outcome = student.get("publication_outcome") or "—"
+    outcome = student.get("publication_outcome") or ""
+
+    OUTCOME_MESSAGES = {
+        "accepted": ("Your paper has been accepted for publication, congratulations! Please remember to share the link to your final published paper with your publication specialist.", "#16A34A", "#F0FDF4"),
+        "did not submit rfp": ("Your final paper has not been submitted yet. Your publication specialist will guide you through submission to your target journal once your final paper is complete.", "#64748B", "#F8FAFC"),
+        "rejected": ("Your paper was not accepted to your first choice of journal. Please make sure you are in touch with your publications specialist to plan your next submission.", "#D97706", "#FFFBEB"),
+        "resubmitted": ("You have resubmitted your revised paper to your target journal - well done! Now you need to wait for the journal's final decision. Please don't forget to inform your publication specialist when the journal gets back to you!", "#2563EB", "#EFF6FF"),
+        "revise and resubmit": ("Your target journal has requested that you make some edits to your paper and then resubmit it. This is a really positive sign that the journal is interested in publishing your work! Please make sure you are in touch with your publication specialist about how to tackle these revisions.", "#2563EB", "#EFF6FF"),
+        "student suspended": ("We have suspended your publication support due to lack of response. Please reach out to your publication specialist if you would like to reinstate publication support.", "#DC2626", "#FEF2F2"),
+        "student withdrew": ("You have decided not to pursue publication at this time. If you change your mind and would like to resume working actively towards publication please reach out to your publication specialist.", "#64748B", "#F8FAFC"),
+        "sumbitted rfp - unsubmitted to pub": ("Congratulations on submitting your revised final paper! Your next step is to submit your work to your target journal. Please make sure you are in touch with your publication specialist as they will help you coordinate this submission.", "#16A34A", "#F0FDF4"),
+        "submitted to pub": ("Your paper has been submitted to your target journal, well done! You now need to wait for the journal to get back to you with feedback. Please remember to update your publication specialist as soon as you receive an update!", "#16A34A", "#F0FDF4"),
+    }
+    outcome_key = outcome.strip().lower()
+    outcome_message, outcome_color, outcome_bg = OUTCOME_MESSAGES.get(outcome_key, ("", "#64748B", "#F8FAFC"))
     submission_workshop = student.get("target_submission_workshop") or ""
     intro_workshop = student.get("target_intro_workshop") or ""
     one_pager = student.get("target_one_pager") or ""
@@ -1463,14 +1477,22 @@ def show_publication_program(student):
         """, unsafe_allow_html=True)
 
     with col_b:
-        st.markdown(f"""
-        <div class="info-card" style="height:100%;">
-            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
-                        letter-spacing:0.05em; margin-bottom:0.4rem;">Latest Publication Outcome</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#1E293B; margin-bottom:0.3rem;">{outcome}</div>
-            <div style="font-size:0.8rem; color:#94A3B8;">The most recent update on your submission status from your Publication Specialist.</div>
-        </div>
-        """, unsafe_allow_html=True)
+        if outcome_message:
+            st.markdown(
+                f'<div class="info-card" style="height:100%; background:{outcome_bg}; border-left:3px solid {outcome_color};">'
+                f'<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.4rem;">Latest Publication Outcome</div>'
+                f'<div style="font-size:0.88rem; color:#1E293B; line-height:1.55;">{outcome_message}</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown(f"""
+            <div class="info-card" style="height:100%;">
+                <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                            letter-spacing:0.05em; margin-bottom:0.4rem;">Latest Publication Outcome</div>
+                <div style="font-size:0.88rem; color:#94A3B8;">No update yet — check back later.</div>
+            </div>
+            """, unsafe_allow_html=True)
 
     st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
 
