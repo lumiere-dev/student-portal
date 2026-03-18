@@ -1567,13 +1567,63 @@ def show_writing_center(student):
 
     st.markdown("#### Writing Center Workshops")
     st.markdown("""
-    <div class="info-card">
-        <p>The section below will populate as writing center workshops are released
-        for the program!</p>
-        <p>Workshops begin at the start of week 4, so be sure to check this page
-        weekly starting then!</p>
+    <div style="background:#F8F9FA; border-left:4px solid #BE1E2D; border-radius:6px;
+                padding:0.85rem 1rem; margin-bottom:1.25rem; color:#475569; font-size:0.92rem; line-height:1.55;">
+        Six workshops are distributed throughout the program to support your writing journey.
+        New workshops are released starting in Week 4 — check back here regularly!
     </div>
     """, unsafe_allow_html=True)
+
+    workshops = [
+        (
+            "WC_WORKSHOP1",
+            "Workshop 1 — Academic Writing and Grammar",
+            "To familiarize you with the nuances of academic research English writing and, in turn, help you maximize rhetorical effectiveness in your work.",
+        ),
+        (
+            "WC_WORKSHOP2",
+            "Workshop 2 — Transforming a Research Proposal and Outline into a Paper",
+            "To guide students through understanding how your research outlines map onto the different sections of your outline and final research paper.",
+        ),
+        (
+            "WC_WORKSHOP3",
+            "Workshop 3 — The Ins and Outs of Writing Different Paper Types",
+            "A continuation of Workshop 2, solidifying the necessary components and nuances of four major paper types: literature reviews, experimental research papers, data analysis papers, and case studies.",
+        ),
+        (
+            "WC_WORKSHOP4",
+            "Workshop 4 — Citations and Plagiarism",
+            "Covers the fundamentals of major citation styles across fields. Proper citations are essential to a professional research paper — and since citations appear in every research paper, this workshop is relevant to every scholar!",
+        ),
+        (
+            "WC_WORKSHOP5",
+            "Workshop 5 — Scientific Writing in LaTeX and Overleaf",
+            "A brief introduction to Overleaf, a software that uses LaTeX to produce beautiful and professional scientific manuscripts. Highly recommended for students doing scientific or quantitative research.",
+        ),
+    ]
+
+    for secret_key, title, description in workshops:
+        url = get_secret(secret_key, "")
+        if url:
+            st.markdown(
+                f'<div class="info-card" style="margin-bottom:0.75rem;">'
+                f'<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.3rem;">Writing Workshop</div>'
+                f'<div style="font-size:1rem; font-weight:700; color:#1E293B; margin-bottom:0.3rem;">{title}</div>'
+                f'<div style="font-size:0.85rem; color:#475569; margin-bottom:0.65rem; line-height:1.5;">{description}</div>'
+                f'<a href="{url}" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; background:#F8F9FA; border:1px solid #E2E8F0; border-radius:6px; padding:0.4rem 0.8rem; font-size:0.85rem; font-weight:600; color:#BE1E2D; text-decoration:none;">▶ Watch Workshop</a>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown(
+                f'<div class="info-card" style="margin-bottom:0.75rem; opacity:0.5;">'
+                f'<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.3rem;">Writing Workshop</div>'
+                f'<div style="font-size:1rem; font-weight:700; color:#1E293B; margin-bottom:0.3rem;">{title}</div>'
+                f'<div style="font-size:0.85rem; color:#475569; margin-bottom:0.5rem; line-height:1.5;">{description}</div>'
+                f'<div style="font-size:0.8rem; color:#94A3B8;">Not yet released</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
 
 # ──────────────────────────────────────────────
 # VIEW: Resources
