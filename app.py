@@ -536,7 +536,7 @@ def get_student_publication_record(tracker_value):
                 "Student Cohort Application Tracker",
                 "Publication Specialist (Text)",
                 "Publication Specialist Email",
-                "Publication Target (Text)",
+                "Publication Target (text)",
                 "PS: Latest Publication Outcome - Latest",
                 "Target Submission Workshop",
                 "Target Intro Workshop",
@@ -596,7 +596,7 @@ def get_student_by_email(email):
                 "revised_final_paper_due": unwrap(fields.get(STUDENT_FIELDS["revised_final_paper_due"], "")),
                 "student_no_shows": unwrap(fields.get(STUDENT_FIELDS["student_no_shows"], 0), default=0),
                 "reason_for_interest": unwrap(fields.get(STUDENT_FIELDS["reason_for_interest"], "")),
-                "publication_target": app_fields.get("Publication Target (Text)", ""),
+                "publication_target": app_fields.get("Publication Target (text)", ""),
                 "submission_portal": unwrap(fields.get(STUDENT_FIELDS["submission_portal"], "")),
                 # Fields below sourced from PUBLICATION_BASE_ID (only populated if Publication Marker = "Yes")
                 "publication_specialist": app_fields.get("Publication Specialist (Text)", ""),
