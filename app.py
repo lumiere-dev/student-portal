@@ -148,7 +148,7 @@ STUDENT_FIELDS = {
     "publication_specialist": "Publication Specialist (Text)",
     "publication_target": "Publication Target (Text)",
     "publication_specialist_email": "Publication Specialist Email",
-    "publication_outcome": "PS: Latest Publication Outcome - Latest",
+    "publication_outcome": "PS: Latest Publication Outcome - (latest)",
     "submission_portal": "Student Submission Portal Lookup",
     "publication_marker": "Publication Marker"
 }
@@ -537,7 +537,7 @@ def get_student_publication_record(tracker_value):
                 "Publication Specialist (Text)",
                 "Publication Specialist Email",
                 "Publication Target (text)",
-                "PS: Latest Publication Outcome - Latest",
+                "PS: Latest Publication Outcome - (latest)",
                 "Target Submission Workshop",
                 "Target Intro Workshop",
                 "Target One-Pager",
@@ -601,7 +601,7 @@ def get_student_by_email(email):
                 # Fields below sourced from PUBLICATION_BASE_ID (only populated if Publication Marker = "Yes")
                 "publication_specialist": app_fields.get("Publication Specialist (Text)", ""),
                 "publication_specialist_email": app_fields.get("Publication Specialist Email", ""),
-                "publication_outcome": app_fields.get("PS: Latest Publication Outcome - Latest", ""),
+                "publication_outcome": app_fields.get("PS: Latest Publication Outcome - (latest)", ""),
                 "target_submission_workshop": app_fields.get("Target Submission Workshop", ""),
                 "target_intro_workshop": app_fields.get("Target Intro Workshop", ""),
                 "target_one_pager": app_fields.get("Target One-Pager", ""),
