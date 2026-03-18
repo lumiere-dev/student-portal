@@ -32,11 +32,11 @@ st.set_page_config(
 
 @st.cache_resource(show_spinner=False)
 def get_airtable_api():
-    return Api(get_secret("AIRTABLE_API_KEY"), timeout=30)
+    return Api(get_secret("AIRTABLE_API_KEY"), timeout=(10, 30), retry_strategy=False)
 
 @st.cache_resource(show_spinner=False)
 def get_application_api():
-    return Api(get_secret("AIRTABLE_API_KEY"), timeout=30)
+    return Api(get_secret("AIRTABLE_API_KEY"), timeout=(10, 30), retry_strategy=False)
 
 @st.cache_resource(show_spinner=False)
 def get_tables():
@@ -1429,7 +1429,6 @@ def show_publication_program(student):
 
     specialist = student.get("publication_specialist") or "Not yet assigned"
     specialist_email = student.get("publication_specialist_email") or ""
-    specialist_email_html = f'<a href="mailto:{specialist_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{specialist_email}</a>' if specialist_email else ""
     target = student.get("publication_target") or "Not yet set"
     outcome = student.get("publication_outcome") or "—"
     submission_workshop = student.get("target_submission_workshop") or ""
@@ -1440,20 +1439,36 @@ def show_publication_program(student):
     quiz_2 = student.get("quiz_2_status") or ""
     quiz_3 = student.get("quiz_3_status") or ""
 
+    # Debug panel (preview/admin mode only)
+    if st.session_state.get("is_preview"):
+        with st.expander("Debug: Publication Base data", expanded=False):
+            st.write("**tracker_value (lookup key):**", student.get("name", ""))
+            st.write("**publication_marker:**", student.get("publication_marker", []))
+            pub_fields = {
+                "publication_specialist": specialist,
+                "publication_specialist_email": specialist_email,
+                "publication_target": target,
+                "publication_outcome": outcome,
+                "target_submission_workshop": submission_workshop,
+                "target_intro_workshop": intro_workshop,
+                "target_one_pager": one_pager,
+                "target_website_link": website_link,
+                "quiz_1_status": quiz_1,
+                "quiz_2_status": quiz_2,
+                "quiz_3_status": quiz_3,
+            }
+            st.json(pub_fields)
+
     # Publication Specialist card
-    st.markdown(f"""
-    <div class="info-card" style="margin-bottom:1rem; display:flex; align-items:center; gap:1rem;">
-        <div style="background:#F1F5F9; border-radius:50%; width:44px; height:44px; flex-shrink:0;
-                    display:flex; align-items:center; justify-content:center;
-                    font-size:1.2rem; color:#64748B;">👤</div>
-        <div>
-            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
-                        letter-spacing:0.05em; margin-bottom:0.2rem;">Your Publication Specialist</div>
-            <div style="font-size:1.15rem; font-weight:700; color:#1E293B; margin-bottom:0.2rem;">{specialist}</div>
-            {specialist_email_html}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    specialist_email_line = f'<a href="mailto:{specialist_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{specialist_email}</a>' if specialist_email else ""
+    st.markdown(
+        f'<div class="info-card" style="margin-bottom:1rem; display:flex; align-items:center; gap:1rem;">'
+        f'<div style="background:#F1F5F9; border-radius:50%; width:44px; height:44px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#64748B;">👤</div>'
+        f'<div><div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.2rem;">Your Publication Specialist</div>'
+        f'<div style="font-size:1.15rem; font-weight:700; color:#1E293B; margin-bottom:0.2rem;">{specialist}</div>'
+        f'{specialist_email_line}</div></div>',
+        unsafe_allow_html=True
+    )
 
     col_a, col_b = st.columns(2)
 
