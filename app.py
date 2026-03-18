@@ -140,6 +140,7 @@ STUDENT_FIELDS = {
     "tuition_paid": "OB: Full Tuition Paid",
     "program_manager_name": "Program Manager (Text)",
     "program_manager_email": "Program Manager Email",
+    "pm_facts": "PM: Facts about PM (used for Intro Email)",
     "writing_coach_name": "Writing Coach Name (Text)",
     "writing_coach_email": "Writing Coach Email",
     "revised_final_paper_due": "PM: Student's Revised Final Paper - Due date",
@@ -590,6 +591,7 @@ def get_student_by_email(email):
                 "tuition_paid": fields.get(STUDENT_FIELDS["tuition_paid"], ""),
                 "program_manager_name": unwrap(fields.get(STUDENT_FIELDS["program_manager_name"], "")),
                 "program_manager_email": unwrap(fields.get(STUDENT_FIELDS["program_manager_email"], "")),
+                "pm_facts": fields.get(STUDENT_FIELDS["pm_facts"], ""),
                 "writing_coach_name": fields.get(STUDENT_FIELDS["writing_coach_name"], ""),
                 "writing_coach_email": unwrap(fields.get(STUDENT_FIELDS["writing_coach_email"], "")),
                 "revised_final_paper_due": unwrap(fields.get(STUDENT_FIELDS["revised_final_paper_due"], "")),
@@ -953,6 +955,7 @@ def show_student_profile_summary(student):
     expected = student.get("expected_meetings", 0) or 0
     pm_name = student.get("program_manager_name") or "Not assigned"
     pm_email = student.get("program_manager_email") or ""
+    pm_facts = student.get("pm_facts") or ""
 
     pct = int(min(completed / expected, 1.0) * 100) if expected > 0 else 0
     progress_label = f"{completed} of {expected} meetings completed" if expected > 0 else "No meetings scheduled yet"
@@ -1007,12 +1010,14 @@ def show_student_profile_summary(student):
     st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
 
     # Program Manager
+    pm_facts_html = f'<div style="font-size:0.85rem; color:#475569; margin-top:0.5rem; line-height:1.5;">{pm_facts}</div>' if pm_facts else ""
     st.markdown(f"""
     <div class="info-card">
         <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
                     letter-spacing:0.05em; margin-bottom:0.5rem;">Program Manager</div>
         <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.25rem;">{pm_name}</div>
         {pm_email_html}
+        {pm_facts_html}
         <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.5rem; line-height:1.4;">
             Your main point of contact for program support and escalations.
         </div>
