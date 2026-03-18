@@ -1444,7 +1444,9 @@ def show_publication_program(student):
         f'<div style="background:#F1F5F9; border-radius:50%; width:44px; height:44px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#64748B;">👤</div>'
         f'<div><div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.2rem;">Your Publication Specialist</div>'
         f'<div style="font-size:1.15rem; font-weight:700; color:#1E293B; margin-bottom:0.2rem;">{specialist}</div>'
-        f'{specialist_email_line}</div></div>',
+        f'{specialist_email_line}'
+        f'<div style="font-size:0.8rem; color:#94A3B8; margin-top:0.4rem;">Your go-to contact for all things publication — reach out with any questions about journal selection, submission, or reviewer feedback.</div>'
+        f'</div></div>',
         unsafe_allow_html=True
     )
 
@@ -1455,7 +1457,8 @@ def show_publication_program(student):
         <div class="info-card" style="height:100%;">
             <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.4rem;">Publication Target</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#1E293B;">{target}</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#1E293B; margin-bottom:0.3rem;">{target}</div>
+            <div style="font-size:0.8rem; color:#94A3B8;">The journal or outlet you are aiming to publish your research in.</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1464,7 +1467,8 @@ def show_publication_program(student):
         <div class="info-card" style="height:100%;">
             <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.4rem;">Latest Publication Outcome</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#1E293B;">{outcome}</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#1E293B; margin-bottom:0.3rem;">{outcome}</div>
+            <div style="font-size:0.8rem; color:#94A3B8;">The most recent update on your submission status from your Publication Specialist.</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1488,7 +1492,8 @@ def show_publication_program(student):
         st.markdown(f"""
         <div class="info-card" style="margin-bottom:1rem;">
             <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
-                        letter-spacing:0.05em; margin-bottom:0.65rem;">Target Resources</div>
+                        letter-spacing:0.05em; margin-bottom:0.3rem;">Target Resources</div>
+            <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.65rem;">Workshops and materials curated specifically for your target publication.</div>
             <div style="display:flex; flex-wrap:wrap;">{links_html}</div>
         </div>
         """, unsafe_allow_html=True)
@@ -1496,7 +1501,8 @@ def show_publication_program(student):
     st.markdown(f"""
     <div class="info-card">
         <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
-                    letter-spacing:0.05em; margin-bottom:0.85rem;">Quiz Checkpoints</div>
+                    letter-spacing:0.05em; margin-bottom:0.3rem;">Quiz Checkpoints</div>
+        <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.85rem;">Track your progress through the publication program quizzes.</div>
         <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
             {"".join([
                 f'<div style="display:flex; align-items:center; gap:0.5rem; background:{"#F0FDF4" if v else "#F8FAFC"}; '
