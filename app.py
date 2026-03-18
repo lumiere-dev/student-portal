@@ -1537,33 +1537,30 @@ def show_writing_center(student):
     wc_name = student.get("writing_coach_name") or "Not assigned"
     wc_email = student.get("writing_coach_email") or ""
     wc_email_html = f'<a href="mailto:{wc_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{wc_email}</a>' if wc_email else ""
-    st.markdown(f"""
-    <div style="background:linear-gradient(135deg, #BE1E2D 0%, #8B1520 100%);
-                border-radius:12px; padding:1.5rem 2rem; color:white; margin-bottom:1rem;
-                display:flex; align-items:center; justify-content:space-between;">
-        <div>
-            <div style="font-size:0.78rem; opacity:0.8; text-transform:uppercase; letter-spacing:0.06em;">Your Writing Coach</div>
-            <div style="font-size:1.6rem; font-weight:700; margin-top:0.2rem;">{wc_name}</div>
-            {"<div style='font-size:0.9rem; opacity:0.85; margin-top:0.3rem;'>" + wc_email + "</div>" if wc_email else ""}
-        </div>
-        <div style="font-size:2.5rem; opacity:0.25;">✍️</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="info-card" style="margin-bottom:1rem; display:flex; align-items:center; gap:1rem;">'
+        f'<div style="background:#F1F5F9; border-radius:50%; width:44px; height:44px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#64748B;">✍️</div>'
+        f'<div><div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.2rem;">Your Writing Coach</div>'
+        f'<div style="font-size:1.15rem; font-weight:700; color:#1E293B; margin-bottom:0.2rem;">{wc_name}</div>'
+        f'{wc_email_html}'
+        f'<div style="font-size:0.8rem; color:#94A3B8; margin-top:0.4rem;">Reach out to book a session or request written feedback on structure, argumentation, citations, and more.</div>'
+        f'</div></div>',
+        unsafe_allow_html=True
+    )
 
     # Writing Center Portal link
     writing_center_url = get_secret("WRITING_CENTER_URL", "")
     if writing_center_url:
-        st.markdown("#### Program Writing Center Portal")
-        st.markdown(f"""
-        <div class="info-card">
-            <p>Use the following link to book a meeting or request written feedback
-            from your writing coach!</p>
-            <p><a href="{writing_center_url}" target="_blank"
-                  style="color:#BE1E2D;">{writing_center_url}</a></p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="info-card" style="margin-bottom:1rem;">'
+            f'<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.3rem;">Writing Center Portal</div>'
+            f'<div style="font-size:0.88rem; color:#475569; margin-bottom:0.6rem;">Book a meeting or request written feedback from your writing coach.</div>'
+            f'<a href="{writing_center_url}" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; background:#F8F9FA; border:1px solid #E2E8F0; border-radius:6px; padding:0.4rem 0.8rem; font-size:0.85rem; font-weight:600; color:#BE1E2D; text-decoration:none;">🔗 Open Portal</a>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
 
-    st.markdown("#### Writing Center Workshops")
+    st.markdown('<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin:1.25rem 0 0.75rem;">Writing Center Workshops</div>', unsafe_allow_html=True)
     workshops = [
         (
             "WC_WORKSHOP1",
