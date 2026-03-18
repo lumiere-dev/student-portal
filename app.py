@@ -1529,9 +1529,7 @@ def show_writing_center(student):
                 padding:0.85rem 1rem; margin-bottom:1.25rem; color:#475569; font-size:0.92rem; line-height:1.55;">
         This is your hub for writing support throughout the program. Use the portal link below to
         <strong>book a session or request written feedback</strong> from your Writing Coach — they can
-        help with structure, argumentation, citations, and polishing your paper. Writing Center
-        <strong>workshops</strong> are released starting in Week 4 and cover key academic writing skills,
-        so check back here regularly once your program is underway.
+        help with structure, argumentation, citations, and polishing your paper.
     </div>
     """, unsafe_allow_html=True)
 
@@ -1566,14 +1564,6 @@ def show_writing_center(student):
         """, unsafe_allow_html=True)
 
     st.markdown("#### Writing Center Workshops")
-    st.markdown("""
-    <div style="background:#F8F9FA; border-left:4px solid #BE1E2D; border-radius:6px;
-                padding:0.85rem 1rem; margin-bottom:1.25rem; color:#475569; font-size:0.92rem; line-height:1.55;">
-        Six workshops are distributed throughout the program to support your writing journey.
-        New workshops are released starting in Week 4 — check back here regularly!
-    </div>
-    """, unsafe_allow_html=True)
-
     workshops = [
         (
             "WC_WORKSHOP1",
