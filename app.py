@@ -32,17 +32,27 @@ st.set_page_config(
 
 @st.cache_resource(show_spinner=False)
 def get_airtable_api():
-    return Api(get_secret("AIRTABLE_API_KEY"))
+    return Api(get_secret("AIRTABLE_API_KEY"), timeout=30)
+
+@st.cache_resource(show_spinner=False)
+def get_application_api():
+    return Api(get_secret("AIRTABLE_API_KEY"), timeout=30)
 
 @st.cache_resource(show_spinner=False)
 def get_tables():
     api = get_airtable_api()
-    base = api.base(get_secret("AIRTABLE_BASE_ID"))
+    base = api.base(get_secret("STUDENT_MENTOR_DATA_ID"))
     return {
         "students": base.table(get_secret("STUDENT_TABLE")),
         "deadlines": base.table(get_secret("DEADLINES_TABLE")),
         "mentors": base.table(get_secret("MENTOR_TABLE"))
     }
+
+@st.cache_resource(show_spinner=False)
+def get_application_table():
+    api = get_application_api()
+    base = api.base(get_secret("PUBLICATION_BASE_ID"))
+    return base.table(get_secret("PUBLICATION_TABLE"))
 
 # ──────────────────────────────────────────────
 # Magic Link Authentication
@@ -139,7 +149,8 @@ STUDENT_FIELDS = {
     "publication_target": "Publication Target (Text)",
     "publication_specialist_email": "Publication Specialist Email",
     "publication_outcome": "PS: Latest Publication Outcome - Latest",
-    "submission_portal": "Student Submission Portal Lookup"
+    "submission_portal": "Student Submission Portal Lookup",
+    "publication_marker": "Publication Marker"
 }
 
 DEADLINE_FIELDS = {
@@ -511,6 +522,37 @@ def is_overdue(due_date_str, status):
 # ──────────────────────────────────────────────
 
 @st.cache_data(ttl=300, show_spinner=False)
+def get_student_publication_record(tracker_value):
+    """Look up the student's record in appOhh4711y4cXSfj/tbluBNu4xfwOWMgr0
+    by matching the 'Student Cohort Application Tracker' field value."""
+    if not tracker_value:
+        return None
+    try:
+        table = get_application_table()
+        name = str(tracker_value).split("|")[0].strip()
+        records = table.all(
+            formula=f"FIND('{name}', {{Student Cohort Application Tracker}})",
+            fields=[
+                "Student Cohort Application Tracker",
+                "Publication Specialist (Text)",
+                "Publication Specialist Email",
+                "Publication Target (Text)",
+                "PS: Latest Publication Outcome - Latest",
+                "Target Submission Workshop",
+                "Target Intro Workshop",
+                "Target One-Pager",
+                "Target Website Link",
+                "Checkpoint: Quiz 1 Status (Automated)",
+                "Checkpoint: Quiz 2 Status (Automated)",
+                "Checkpoint: Quiz 3 Status (Automated)",
+            ]
+        )
+        return records[0] if records else None
+    except Exception as e:
+        st.error(f"Error fetching student application: {e}")
+        return None
+
+@st.cache_data(ttl=300, show_spinner=False)
 def get_student_by_email(email):
     """Find student by email in Student Table"""
     tables = get_tables()
@@ -522,9 +564,17 @@ def get_student_by_email(email):
         if records:
             record = records[0]
             fields = record["fields"]
+            tracker_value = fields.get(STUDENT_FIELDS["name"], "")
+            raw_marker = fields.get(STUDENT_FIELDS["publication_marker"], [])
+            pub_marker = raw_marker[0] if isinstance(raw_marker, list) else raw_marker
+            if pub_marker == "Yes":
+                application = get_student_publication_record(tracker_value)
+                app_fields = application["fields"] if application else {}
+            else:
+                app_fields = {}
             return {
                 "id": record["id"],
-                "name": fields.get(STUDENT_FIELDS["name"], "Unknown"),
+                "name": tracker_value or "Unknown",
                 "email": fields.get(email_field, email),
                 "research_area": fields.get(STUDENT_FIELDS["research_area"], ""),
                 "city": fields.get(STUDENT_FIELDS["city"], ""),
@@ -546,11 +596,20 @@ def get_student_by_email(email):
                 "revised_final_paper_due": unwrap(fields.get(STUDENT_FIELDS["revised_final_paper_due"], "")),
                 "student_no_shows": unwrap(fields.get(STUDENT_FIELDS["student_no_shows"], 0), default=0),
                 "reason_for_interest": unwrap(fields.get(STUDENT_FIELDS["reason_for_interest"], "")),
-                "publication_specialist": fields.get(STUDENT_FIELDS["publication_specialist"], ""),
-                "publication_target": fields.get(STUDENT_FIELDS["publication_target"], ""),
-                "publication_specialist_email": unwrap(fields.get(STUDENT_FIELDS["publication_specialist_email"], "")),
-                "publication_outcome": unwrap(fields.get(STUDENT_FIELDS["publication_outcome"], "")),
-                "submission_portal": unwrap(fields.get(STUDENT_FIELDS["submission_portal"], ""))
+                "publication_target": app_fields.get("Publication Target (Text)", ""),
+                "submission_portal": unwrap(fields.get(STUDENT_FIELDS["submission_portal"], "")),
+                # Fields below sourced from PUBLICATION_BASE_ID (only populated if Publication Marker = "Yes")
+                "publication_specialist": app_fields.get("Publication Specialist (Text)", ""),
+                "publication_specialist_email": app_fields.get("Publication Specialist Email", ""),
+                "publication_outcome": app_fields.get("PS: Latest Publication Outcome - Latest", ""),
+                "target_submission_workshop": app_fields.get("Target Submission Workshop", ""),
+                "target_intro_workshop": app_fields.get("Target Intro Workshop", ""),
+                "target_one_pager": app_fields.get("Target One-Pager", ""),
+                "target_website_link": app_fields.get("Target Website Link", ""),
+                "quiz_1_status": app_fields.get("Checkpoint: Quiz 1 Status (Automated)", ""),
+                "quiz_2_status": app_fields.get("Checkpoint: Quiz 2 Status (Automated)", ""),
+                "quiz_3_status": app_fields.get("Checkpoint: Quiz 3 Status (Automated)", ""),
+                "publication_marker": fields.get(STUDENT_FIELDS["publication_marker"], []),
             }
     except Exception as e:
         st.error(f"Error fetching student: {e}")
@@ -810,15 +869,18 @@ def show_dashboard():
 
         st.markdown("---")
 
+        nav_options = [
+            "Student Profile Summary",
+            "Deadlines & Submissions",
+        ]
+        _pub_marker = student.get("publication_marker", [])
+        if "Yes" in ((_pub_marker if isinstance(_pub_marker, list) else [_pub_marker])):
+            nav_options.append("Publication Program")
+        nav_options += ["Writing Center", "Resources"]
+
         view = st.radio(
             "Navigation",
-            [
-                "Student Profile Summary",
-                "Deadlines & Submissions",
-                "Publication Program",
-                "Writing Center",
-                "Resources",
-            ],
+            nav_options,
             label_visibility="collapsed"
         )
 
@@ -1361,43 +1423,102 @@ def show_publication_program(student):
         This page shows your publication journey. Your <strong>Publication Specialist</strong> will guide
         you through the journal submission process — from selecting a target publication to navigating
         reviewer feedback. Reach out to them directly with any questions about where or how to submit
-        your paper. Your <strong>Publication Target</strong> is the journal or outlet you're aiming for,
-        and <strong>Latest Publication Outcome</strong> reflects the most recent update on your submission.
+        your paper.
     </div>
     """, unsafe_allow_html=True)
 
     specialist = student.get("publication_specialist") or "Not yet assigned"
     specialist_email = student.get("publication_specialist_email") or ""
+    specialist_email_html = f'<a href="mailto:{specialist_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{specialist_email}</a>' if specialist_email else ""
     target = student.get("publication_target") or "Not yet set"
     outcome = student.get("publication_outcome") or "—"
+    submission_workshop = student.get("target_submission_workshop") or ""
+    intro_workshop = student.get("target_intro_workshop") or ""
+    one_pager = student.get("target_one_pager") or ""
+    website_link = student.get("target_website_link") or ""
+    quiz_1 = student.get("quiz_1_status") or ""
+    quiz_2 = student.get("quiz_2_status") or ""
+    quiz_3 = student.get("quiz_3_status") or ""
 
-    # Specialist banner card
+    # Publication Specialist card
     st.markdown(f"""
-    <div style="background:linear-gradient(135deg, #BE1E2D 0%, #8B1520 100%);
-                border-radius:12px; padding:2rem; color:white; margin-bottom:1.5rem;">
-        <div style="font-size:0.85rem; opacity:0.9;">Your Publication Specialist</div>
-        <div style="font-size:1.8rem; font-weight:700; margin-top:0.25rem;">{specialist}</div>
-        {"<div style='font-size:0.95rem; opacity:0.85; margin-top:0.35rem;'>" + specialist_email + "</div>" if specialist_email else ""}
+    <div class="info-card" style="margin-bottom:1rem; display:flex; align-items:center; gap:1rem;">
+        <div style="background:#F1F5F9; border-radius:50%; width:44px; height:44px; flex-shrink:0;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:1.2rem; color:#64748B;">👤</div>
+        <div>
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.2rem;">Your Publication Specialist</div>
+            <div style="font-size:1.15rem; font-weight:700; color:#1E293B; margin-bottom:0.2rem;">{specialist}</div>
+            {specialist_email_html}
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    left, right = st.columns(2)
+    col_a, col_b = st.columns(2)
 
-    with left:
+    with col_a:
         st.markdown(f"""
-        <div class="info-card">
-            <div style="font-size:0.85rem; color:#64748B;">Publication Target</div>
-            <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{target}</div>
+        <div class="info-card" style="height:100%;">
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.4rem;">Publication Target</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#1E293B;">{target}</div>
         </div>
         """, unsafe_allow_html=True)
 
-    with right:
+    with col_b:
         st.markdown(f"""
-        <div class="info-card">
-            <div style="font-size:0.85rem; color:#64748B;">Latest Publication Outcome</div>
-            <div style="font-size:1.15rem; font-weight:600; color:#1E293B; margin-top:0.25rem;">{outcome}</div>
+        <div class="info-card" style="height:100%;">
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.4rem;">Latest Publication Outcome</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#1E293B;">{outcome}</div>
         </div>
         """, unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
+
+    # Target resources — only render links that exist
+    resource_links = [
+        ("Target Submission Workshop", submission_workshop),
+        ("Target Intro Workshop", intro_workshop),
+        ("Target One-Pager", one_pager),
+        ("Target Website", website_link),
+    ]
+    available = [(label, url) for label, url in resource_links if url]
+    if available:
+        links_html = "".join([
+            f'<a href="{url}" target="_blank" '
+            f'style="display:inline-flex; align-items:center; gap:0.4rem; background:#F8F9FA; '
+            f'border:1px solid #E2E8F0; border-radius:6px; padding:0.45rem 0.85rem; '
+            f'font-size:0.88rem; font-weight:600; color:#BE1E2D; text-decoration:none; margin-right:0.5rem; margin-bottom:0.5rem;">🔗 {label}</a>'
+            for label, url in available
+        ])
+        st.markdown(f"""
+        <div class="info-card" style="margin-bottom:1rem;">
+            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.65rem;">Target Resources</div>
+            <div style="display:flex; flex-wrap:wrap;">{links_html}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div class="info-card">
+        <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                    letter-spacing:0.05em; margin-bottom:0.85rem;">Quiz Checkpoints</div>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            {"".join([
+                f'<div style="display:flex; align-items:center; gap:0.5rem; background:{"#F0FDF4" if v else "#F8FAFC"}; '
+                f'border:1px solid {"#86EFAC" if v else "#E2E8F0"}; border-radius:8px; padding:0.5rem 0.85rem;">'
+                f'<div style="width:1.25rem; height:1.25rem; border-radius:50%; background:{"#16A34A" if v else "#CBD5E1"}; '
+                f'color:white; font-size:0.75rem; font-weight:700; display:flex; align-items:center; justify-content:center;">{"✓" if v else "–"}</div>'
+                f'<div><div style="font-size:0.82rem; font-weight:600; color:#1E293B;">{label}</div>'
+                f'<div style="font-size:0.75rem; color:{"#16A34A" if v else "#94A3B8"};">{"Submitted" if v else "Not submitted"}</div></div>'
+                f'</div>'
+                for label, v in [("Quiz 1", quiz_1), ("Quiz 2", quiz_2), ("Quiz 3", quiz_3)]
+            ])}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: Writing Center
