@@ -1009,18 +1009,31 @@ def show_student_profile_summary(student):
 
     st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
 
-    # Program Manager
-    pm_facts_html = f'<div style="font-size:0.85rem; color:#475569; margin-top:0.5rem; line-height:1.5;">{pm_facts}</div>' if pm_facts else ""
+    # Program Manager — clean up pm_facts (may arrive as list or raw string with \n)
+    raw_facts = pm_facts
+    if isinstance(raw_facts, list):
+        raw_facts = " ".join(raw_facts)
+    raw_facts = raw_facts.replace("\\n", "\n").strip()
+    facts_paragraphs = [p.strip() for p in raw_facts.split("\n") if p.strip()]
+    pm_facts_html = ""
+    if facts_paragraphs:
+        paras_html = "".join(f'<p style="margin:0 0 0.45rem 0;">{p}</p>' for p in facts_paragraphs)
+        pm_facts_html = f"""
+        <div style="margin-top:0.85rem; border-top:1px solid #F1F5F9; padding-top:0.75rem;">
+            <div style="font-size:0.68rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.4rem;">About Me</div>
+            <div style="font-size:0.88rem; color:#475569; line-height:1.6;">{paras_html}</div>
+        </div>"""
     st.markdown(f"""
     <div class="info-card">
         <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
                     letter-spacing:0.05em; margin-bottom:0.5rem;">Program Manager</div>
         <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.25rem;">{pm_name}</div>
         {pm_email_html}
-        {pm_facts_html}
-        <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.5rem; line-height:1.4;">
+        <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.4rem; line-height:1.4;">
             Your main point of contact for program support and escalations.
         </div>
+        {pm_facts_html}
     </div>
     """, unsafe_allow_html=True)
 
