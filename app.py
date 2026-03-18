@@ -541,7 +541,6 @@ def get_student_publication_record(tracker_value):
                 "Target Submission Workshop",
                 "Target Intro Workshop",
                 "Target One-Pager",
-                "Target Website Link",
                 "Checkpoint: Quiz 1 Status (Automated)",
                 "Checkpoint: Quiz 2 Status (Automated)",
                 "Checkpoint: Quiz 3 Status (Automated)",
@@ -605,7 +604,6 @@ def get_student_by_email(email):
                 "target_submission_workshop": app_fields.get("Target Submission Workshop", ""),
                 "target_intro_workshop": app_fields.get("Target Intro Workshop", ""),
                 "target_one_pager": app_fields.get("Target One-Pager", ""),
-                "target_website_link": app_fields.get("Target Website Link", ""),
                 "quiz_1_status": app_fields.get("Checkpoint: Quiz 1 Status (Automated)", ""),
                 "quiz_2_status": app_fields.get("Checkpoint: Quiz 2 Status (Automated)", ""),
                 "quiz_3_status": app_fields.get("Checkpoint: Quiz 3 Status (Automated)", ""),
@@ -1434,25 +1432,10 @@ def show_publication_program(student):
     submission_workshop = student.get("target_submission_workshop") or ""
     intro_workshop = student.get("target_intro_workshop") or ""
     one_pager = student.get("target_one_pager") or ""
-    website_link = student.get("target_website_link") or ""
     quiz_1 = student.get("quiz_1_status") or ""
     quiz_2 = student.get("quiz_2_status") or ""
     quiz_3 = student.get("quiz_3_status") or ""
 
-    # Debug panel (preview/admin mode only)
-    if st.session_state.get("is_preview"):
-        with st.expander("Debug: Publication Base lookup", expanded=True):
-            tracker_value = student.get("name", "")
-            pub_marker = student.get("publication_marker", [])
-            st.write("**Tracker value (FIND key):**", tracker_value)
-            st.write("**Publication marker:**", pub_marker)
-
-            raw_record = get_student_publication_record(tracker_value)
-            if raw_record:
-                st.success("Record found in publication base.")
-                st.json(raw_record.get("fields", {}))
-            else:
-                st.error("No record found in publication base for this tracker value.")
 
     # Publication Specialist card
     specialist_email_line = f'<a href="mailto:{specialist_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{specialist_email}</a>' if specialist_email else ""
@@ -1492,7 +1475,6 @@ def show_publication_program(student):
         ("Target Submission Workshop", submission_workshop),
         ("Target Intro Workshop", intro_workshop),
         ("Target One-Pager", one_pager),
-        ("Target Website", website_link),
     ]
     available = [(label, url) for label, url in resource_links if url]
     if available:
