@@ -870,7 +870,7 @@ def show_dashboard():
         st.markdown("---")
 
         nav_options = [
-            "Student Profile Summary",
+            "Your Profile",
             "Deadlines & Submissions",
         ]
         _pub_marker = student.get("publication_marker", [])
@@ -918,7 +918,7 @@ def show_dashboard():
     """, unsafe_allow_html=True)
 
     # ── Route to view ──
-    if view == "Student Profile Summary":
+    if view == "Your Profile":
         show_student_profile_summary(student)
     elif view == "Deadlines & Submissions":
         show_deadlines_and_submissions(student)
@@ -934,7 +934,7 @@ def show_dashboard():
 # ──────────────────────────────────────────────
 
 def show_student_profile_summary(student):
-    st.markdown("### Student Profile Summary")
+    st.markdown("### Your Profile")
     st.markdown("""
     <div style="background:#F8F9FA; border-left:4px solid #BE1E2D; border-radius:6px;
                 padding:0.85rem 1rem; margin-bottom:1.25rem; color:#475569; font-size:0.92rem; line-height:1.55;">
@@ -968,7 +968,7 @@ def show_student_profile_summary(student):
                     display:flex; align-items:center; justify-content:center;
                     font-size:1.2rem; color:#64748B;">👤</div>
         <div>
-            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+            <div style="font-size:0.85rem; font-weight:700; color:#94A3B8; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.2rem;">Your Mentor</div>
             <div style="font-size:1.15rem; font-weight:700; color:#1E293B; margin-bottom:0.2rem;">{mentor_name}</div>
             {mentor_email_html}
@@ -982,7 +982,7 @@ def show_student_profile_summary(student):
     with col_a:
         st.markdown(f"""
         <div class="info-card" style="height:100%;">
-            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+            <div style="font-size:0.85rem; font-weight:700; color:#94A3B8; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.4rem;">Revised Final Paper Due</div>
             <div style="font-size:1.25rem; font-weight:700; color:#1E293B;">{format_date(revised_due)}</div>
         </div>
@@ -991,7 +991,7 @@ def show_student_profile_summary(student):
     with col_b:
         st.markdown(f"""
         <div class="info-card" style="height:100%;">
-            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+            <div style="font-size:0.85rem; font-weight:700; color:#94A3B8; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.75rem;">Meetings Progress</div>
             <div style="background:#E2E8F0; border-radius:999px; height:8px; margin-bottom:0.55rem;">
                 <div style="background:linear-gradient(90deg, #BE1E2D, #8B1520); width:{pct}%;
@@ -1017,12 +1017,12 @@ def show_student_profile_summary(student):
     facts_paragraphs = [p.strip() for p in raw_facts.split("\n") if p.strip()]
     if facts_paragraphs:
         paras_html = "".join(f'<p style="margin:0 0 0.45rem 0;">{p}</p>' for p in facts_paragraphs)
-        pm_facts_html = '<div style="margin-top:0.85rem; border-top:1px solid #F1F5F9; padding-top:0.75rem;"><div style="font-size:0.68rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.4rem;">About Me</div><div style="font-size:0.88rem; color:#475569; line-height:1.6;">' + paras_html + '</div></div>'
+        pm_facts_html = '<div style="margin-top:0.85rem; border-top:1px solid #F1F5F9; padding-top:0.75rem;"><div style="font-size:0.85rem; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.4rem;">Fun facts about your Program Manager</div><div style="font-size:0.88rem; color:#475569; line-height:1.6;">' + paras_html + '</div></div>'
     else:
         pm_facts_html = ""
     st.markdown(f"""
 <div class="info-card">
-<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Program Manager</div>
+<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Program Manager</div>
 <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.25rem;">{pm_name}</div>
 {pm_email_html}
 <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.4rem; line-height:1.4;">Your main point of contact for program support and escalations.</div>
