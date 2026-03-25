@@ -1265,23 +1265,37 @@ def show_deadlines_and_submissions(student):
 
 def _render_submission_value(value, label=None):
     """Render a submission value — attachment list, URL, or plain text."""
-    prefix = f'<span style="font-size:1rem; color:#64748B; font-weight:500;">{label}: </span>' if label else ""
+    label_html = f'<span style="font-size:0.78rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:0.4rem;">{label}</span>' if label else ""
+
+    def bubble(content_html):
+        return (
+            f'<div style="display:inline-flex; align-items:center; gap:0.5rem; '
+            f'background:#F1F5F9; border:1px solid #E2E8F0; border-radius:999px; '
+            f'padding:0.4rem 0.9rem; font-size:0.88rem; color:#1E293B; margin-top:0.25rem;">'
+            f'📄 {content_html}'
+            f'</div>'
+        )
+
     if isinstance(value, list):
         for item in value:
             if isinstance(item, dict):
                 url = item.get("url", "")
                 filename = item.get("filename", "Download")
                 if url:
-                    st.markdown(f'{prefix}<a href="{url}" target="_blank">{filename}</a>', unsafe_allow_html=True)
+                    content = f'<a href="{url}" target="_blank" style="color:#BE1E2D; font-weight:600; text-decoration:none;">{filename}</a>'
+                    st.markdown(f'{label_html}{bubble(content)}', unsafe_allow_html=True)
+                    label_html = ""
             else:
-                st.markdown(f"{prefix}{item}", unsafe_allow_html=True)
+                st.markdown(f'{label_html}{bubble(str(item))}', unsafe_allow_html=True)
+                label_html = ""
     elif isinstance(value, str):
         if value.startswith("http"):
-            st.markdown(f'{prefix}<a href="{value}" target="_blank">View Submission</a>', unsafe_allow_html=True)
+            content = f'<a href="{value}" target="_blank" style="color:#BE1E2D; font-weight:600; text-decoration:none;">View Submission</a>'
         else:
-            st.markdown(f"{prefix}{value}", unsafe_allow_html=True)
+            content = value
+        st.markdown(f'{label_html}{bubble(content)}', unsafe_allow_html=True)
     else:
-        st.markdown(f"{prefix}{value}", unsafe_allow_html=True)
+        st.markdown(f'{label_html}{bubble(str(value))}', unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: My Profile
