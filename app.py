@@ -435,6 +435,10 @@ if "magic_link_sent" not in st.session_state:
     st.session_state.magic_link_sent = False
 if "team_unlocked" not in st.session_state:
     st.session_state.team_unlocked = False
+if "student_records" not in st.session_state:
+    st.session_state.student_records = []
+if "program_selected" not in st.session_state:
+    st.session_state.program_selected = False
 
 cookies = CookieController()
 
@@ -566,9 +570,60 @@ def get_student_publication_record(tracker_value):
         st.error(f"Error fetching student application: {e}")
         return None
 
+def _build_student_dict(record, email):
+    """Build a student dict from a raw Airtable record."""
+    email_field = get_secret("STUDENT_EMAIL_FIELD", "Email")
+    fields = record["fields"]
+    tracker_value = fields.get(STUDENT_FIELDS["name"], "")
+    raw_marker = fields.get(STUDENT_FIELDS["publication_marker"], [])
+    pub_marker = raw_marker[0] if isinstance(raw_marker, list) and raw_marker else raw_marker
+    if pub_marker == "Yes":
+        application = get_student_publication_record(tracker_value)
+        app_fields = application["fields"] if application else {}
+    else:
+        app_fields = {}
+    return {
+        "id": record["id"],
+        "name": tracker_value or "Unknown",
+        "email": fields.get(email_field, email),
+        "research_area": fields.get(STUDENT_FIELDS["research_area"], ""),
+        "city": fields.get(STUDENT_FIELDS["city"], ""),
+        "graduation_year": fields.get(STUDENT_FIELDS["graduation_year"], ""),
+        "mentor": fields.get(STUDENT_FIELDS["mentor"], ""),
+        "mentor_email": unwrap(fields.get(STUDENT_FIELDS["mentor_email"], "")),
+        "mentor_confirmation": fields.get(STUDENT_FIELDS["mentor_confirmation"], ""),
+        "background_shared": fields.get(STUDENT_FIELDS["background_shared"], ""),
+        "expected_meetings": fields.get(STUDENT_FIELDS["expected_meetings"], 0),
+        "completed_meetings": fields.get(STUDENT_FIELDS["completed_meetings"], 0),
+        "notes_summary": fields.get(STUDENT_FIELDS["notes_summary"], ""),
+        "hours_recorded": fields.get(STUDENT_FIELDS["hours_recorded"], ""),
+        "foundation_student": fields.get(STUDENT_FIELDS["foundation_student"], ""),
+        "tuition_paid": fields.get(STUDENT_FIELDS["tuition_paid"], ""),
+        "program_manager_name": unwrap(fields.get(STUDENT_FIELDS["program_manager_name"], "")),
+        "program_manager_email": unwrap(fields.get(STUDENT_FIELDS["program_manager_email"], "")),
+        "pm_facts": fields.get(STUDENT_FIELDS["pm_facts"], ""),
+        "writing_coach_name": fields.get(STUDENT_FIELDS["writing_coach_name"], ""),
+        "writing_coach_email": unwrap(fields.get(STUDENT_FIELDS["writing_coach_email"], "")),
+        "revised_final_paper_due": unwrap(fields.get(STUDENT_FIELDS["revised_final_paper_due"], "")),
+        "student_no_shows": unwrap(fields.get(STUDENT_FIELDS["student_no_shows"], 0), default=0),
+        "reason_for_interest": unwrap(fields.get(STUDENT_FIELDS["reason_for_interest"], "")),
+        "publication_target": app_fields.get("Publication Target (text)", ""),
+        "submission_portal": unwrap(fields.get(STUDENT_FIELDS["submission_portal"], "")),
+        "publication_specialist": app_fields.get("Publication Specialist (Text)", ""),
+        "publication_specialist_email": app_fields.get("Publication Specialist Email", ""),
+        "publication_outcome": app_fields.get("PS: Latest Publication Outcome - (latest)", ""),
+        "target_submission_workshop": app_fields.get("Target Submission Workshop", ""),
+        "target_intro_workshop": app_fields.get("Target Intro Workshop", ""),
+        "target_one_pager": app_fields.get("Target One-Pager", ""),
+        "quiz_1_status": app_fields.get("Checkpoint: Quiz 1 Status (Automated)", ""),
+        "quiz_2_status": app_fields.get("Checkpoint: Quiz 2 Status (Automated)", ""),
+        "quiz_3_status": app_fields.get("Checkpoint: Quiz 3 Status (Automated)", ""),
+        "publication_marker": fields.get(STUDENT_FIELDS["publication_marker"], []),
+    }
+
 @st.cache_data(ttl=300, show_spinner=False)
 def get_student_by_email(email):
-    """Find student by email in Student Table"""
+    """Find student by email — returns the first matching record or None."""
     tables = get_tables()
     email_field = get_secret("STUDENT_EMAIL_FIELD", "Email")
     try:
@@ -576,58 +631,24 @@ def get_student_by_email(email):
             formula=f"LOWER({{{email_field}}}) = LOWER('{email}')"
         )
         if records:
-            record = records[0]
-            fields = record["fields"]
-            tracker_value = fields.get(STUDENT_FIELDS["name"], "")
-            raw_marker = fields.get(STUDENT_FIELDS["publication_marker"], [])
-            pub_marker = raw_marker[0] if isinstance(raw_marker, list) and raw_marker else raw_marker
-            if pub_marker == "Yes":
-                application = get_student_publication_record(tracker_value)
-                app_fields = application["fields"] if application else {}
-            else:
-                app_fields = {}
-            return {
-                "id": record["id"],
-                "name": tracker_value or "Unknown",
-                "email": fields.get(email_field, email),
-                "research_area": fields.get(STUDENT_FIELDS["research_area"], ""),
-                "city": fields.get(STUDENT_FIELDS["city"], ""),
-                "graduation_year": fields.get(STUDENT_FIELDS["graduation_year"], ""),
-                "mentor": fields.get(STUDENT_FIELDS["mentor"], ""),
-                "mentor_email": unwrap(fields.get(STUDENT_FIELDS["mentor_email"], "")),
-                "mentor_confirmation": fields.get(STUDENT_FIELDS["mentor_confirmation"], ""),
-                "background_shared": fields.get(STUDENT_FIELDS["background_shared"], ""),
-                "expected_meetings": fields.get(STUDENT_FIELDS["expected_meetings"], 0),
-                "completed_meetings": fields.get(STUDENT_FIELDS["completed_meetings"], 0),
-                "notes_summary": fields.get(STUDENT_FIELDS["notes_summary"], ""),
-                "hours_recorded": fields.get(STUDENT_FIELDS["hours_recorded"], ""),
-                "foundation_student": fields.get(STUDENT_FIELDS["foundation_student"], ""),
-                "tuition_paid": fields.get(STUDENT_FIELDS["tuition_paid"], ""),
-                "program_manager_name": unwrap(fields.get(STUDENT_FIELDS["program_manager_name"], "")),
-                "program_manager_email": unwrap(fields.get(STUDENT_FIELDS["program_manager_email"], "")),
-                "pm_facts": fields.get(STUDENT_FIELDS["pm_facts"], ""),
-                "writing_coach_name": fields.get(STUDENT_FIELDS["writing_coach_name"], ""),
-                "writing_coach_email": unwrap(fields.get(STUDENT_FIELDS["writing_coach_email"], "")),
-                "revised_final_paper_due": unwrap(fields.get(STUDENT_FIELDS["revised_final_paper_due"], "")),
-                "student_no_shows": unwrap(fields.get(STUDENT_FIELDS["student_no_shows"], 0), default=0),
-                "reason_for_interest": unwrap(fields.get(STUDENT_FIELDS["reason_for_interest"], "")),
-                "publication_target": app_fields.get("Publication Target (text)", ""),
-                "submission_portal": unwrap(fields.get(STUDENT_FIELDS["submission_portal"], "")),
-                # Fields below sourced from PUBLICATION_BASE_ID (only populated if Publication Marker = "Yes")
-                "publication_specialist": app_fields.get("Publication Specialist (Text)", ""),
-                "publication_specialist_email": app_fields.get("Publication Specialist Email", ""),
-                "publication_outcome": app_fields.get("PS: Latest Publication Outcome - (latest)", ""),
-                "target_submission_workshop": app_fields.get("Target Submission Workshop", ""),
-                "target_intro_workshop": app_fields.get("Target Intro Workshop", ""),
-                "target_one_pager": app_fields.get("Target One-Pager", ""),
-                "quiz_1_status": app_fields.get("Checkpoint: Quiz 1 Status (Automated)", ""),
-                "quiz_2_status": app_fields.get("Checkpoint: Quiz 2 Status (Automated)", ""),
-                "quiz_3_status": app_fields.get("Checkpoint: Quiz 3 Status (Automated)", ""),
-                "publication_marker": fields.get(STUDENT_FIELDS["publication_marker"], []),
-            }
+            return _build_student_dict(records[0], email)
     except Exception as e:
         st.error(f"Error fetching student: {e}")
     return None
+
+@st.cache_data(ttl=300, show_spinner=False)
+def get_all_student_records_by_email(email):
+    """Find all records for an email — returns a list (students with multiple programs)."""
+    tables = get_tables()
+    email_field = get_secret("STUDENT_EMAIL_FIELD", "Email")
+    try:
+        records = tables["students"].all(
+            formula=f"LOWER({{{email_field}}}) = LOWER('{email}')"
+        )
+        return [_build_student_dict(r, email) for r in records]
+    except Exception as e:
+        st.error(f"Error fetching student records: {e}")
+    return []
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_deadlines_for_student(student_name):
@@ -675,13 +696,18 @@ def check_session_cookie():
     if token:
         email = verify_session_token(token)
         if email:
-            student = get_student_by_email(email)
-            if student:
+            students = get_all_student_records_by_email(email)
+            if students:
                 st.session_state.authenticated = True
-                st.session_state.student_name = student["name"]
                 st.session_state.student_email = email
-                st.session_state.student_record = student
                 st.session_state.is_preview = False
+                st.session_state.student_records = students
+                if len(students) == 1:
+                    st.session_state.student_record = students[0]
+                    st.session_state.student_name = students[0]["name"]
+                    st.session_state.program_selected = True
+                else:
+                    st.session_state.program_selected = False
                 st.rerun()
         else:
             cookies.remove("student_session")
@@ -692,13 +718,18 @@ def check_magic_link_token():
         token = query_params["token"]
         email = verify_magic_token(token)
         if email:
-            student = get_student_by_email(email)
-            if student:
+            students = get_all_student_records_by_email(email)
+            if students:
                 st.session_state.authenticated = True
-                st.session_state.student_name = student["name"]
                 st.session_state.student_email = email
-                st.session_state.student_record = student
                 st.session_state.is_preview = False
+                st.session_state.student_records = students
+                if len(students) == 1:
+                    st.session_state.student_record = students[0]
+                    st.session_state.student_name = students[0]["name"]
+                    st.session_state.program_selected = True
+                else:
+                    st.session_state.program_selected = False
                 cookies.set("student_session", generate_session_token(email), max_age=timedelta(days=30))
                 st.query_params.clear()
                 st.rerun()
@@ -708,6 +739,68 @@ def check_magic_link_token():
         else:
             st.error("This login link has expired or is invalid. Please request a new one.")
             st.query_params.clear()
+
+# ──────────────────────────────────────────────
+# PROGRAM SELECTOR
+# ──────────────────────────────────────────────
+
+def show_program_selector():
+    import base64
+    st.markdown("""
+    <style>
+        .stApp { background-color: #1A1A2E; }
+        #MainMenu, header, footer { visibility: hidden; }
+        .block-container { padding-top: 10vh !important; max-width: 100% !important; }
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) {
+            background: white !important;
+            border-radius: 16px !important;
+            padding: 2.5rem !important;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4) !important;
+        }
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) p,
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) label,
+        [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) span {
+            color: #1A1A2E !important;
+        }
+        .stButton > button {
+            background-color: #DC1E35 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            width: 100% !important;
+        }
+        .stButton > button p { color: white !important; }
+        .stButton > button:hover { background-color: #B01829 !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        with open("assets/logo.png", "rb") as f:
+            logo_b64 = base64.b64encode(f.read()).decode()
+        st.markdown(
+            f'<div style="text-align:center; margin-bottom:0.5rem;">'
+            f'<img src="data:image/png;base64,{logo_b64}" width="220"></div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<h2 style="text-align:center; color:#1A1A2E; font-size:1.5rem; font-weight:700; margin:0.5rem 0 0.25rem;">Select Your Program</h2>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<p style="text-align:center; color:#94A3B8; font-size:0.82rem; margin-bottom:1.5rem;">You have multiple programs. Which would you like to view?</p>',
+            unsafe_allow_html=True
+        )
+
+        for student in st.session_state.student_records:
+            parts = [p.strip() for p in student["name"].split("|")]
+            label = " · ".join(parts[1:]) if len(parts) > 1 else student["name"]
+            if st.button(label, key=f"prog_{student['id']}"):
+                st.session_state.student_record = student
+                st.session_state.student_name = student["name"]
+                st.session_state.program_selected = True
+                st.rerun()
 
 # ──────────────────────────────────────────────
 # LOGIN PAGE
@@ -931,6 +1024,8 @@ def show_dashboard():
                 cookies.remove("student_session")
             for key in ["authenticated", "student_name", "student_email", "student_record", "is_preview"]:
                 st.session_state[key] = False if key == "authenticated" or key == "is_preview" else None
+            st.session_state.student_records = []
+            st.session_state.program_selected = False
             st.rerun()
 
     # ── Preview banner ──
@@ -1865,6 +1960,8 @@ def main():
 
     if not st.session_state.authenticated:
         show_login_page()
+    elif not st.session_state.program_selected:
+        show_program_selector()
     else:
         show_dashboard()
 
