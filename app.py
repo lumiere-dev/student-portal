@@ -955,6 +955,7 @@ def show_login_page():
                         st.session_state.student_email = preview_email
                         st.session_state.student_record = student
                         st.session_state.is_preview = True
+                        st.session_state.program_selected = True
                         st.rerun()
                     else:
                         st.error("Student email not found.")
