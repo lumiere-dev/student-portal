@@ -927,7 +927,8 @@ def show_dashboard():
             st.rerun()
 
         if st.button("Logout"):
-            cookies.remove("student_session")
+            if cookies.get("student_session"):
+                cookies.remove("student_session")
             for key in ["authenticated", "student_name", "student_email", "student_record", "is_preview"]:
                 st.session_state[key] = False if key == "authenticated" or key == "is_preview" else None
             st.rerun()
