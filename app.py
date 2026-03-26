@@ -730,7 +730,8 @@ def check_magic_link_token():
                     st.session_state.program_selected = True
                 else:
                     st.session_state.program_selected = False
-                cookies.set("student_session", generate_session_token(email), max_age=timedelta(days=30))
+                # Defer cookie write to next run — JS component not ready on first load.
+                st.session_state.pending_session_cookie = email
                 st.query_params.clear()
                 st.rerun()
             else:
@@ -1977,6 +1978,13 @@ def show_resources(student):
 # ──────────────────────────────────────────────
 
 def main():
+    # Write deferred session cookie now that the JS component is ready
+    if "pending_session_cookie" in st.session_state:
+        try:
+            cookies.set("student_session", generate_session_token(st.session_state.pending_session_cookie), max_age=30 * 24 * 3600)
+            del st.session_state.pending_session_cookie
+        except Exception:
+            pass  # Component not ready yet — retry on next run
     check_session_cookie()
     check_magic_link_token()
 
