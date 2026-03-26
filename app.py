@@ -750,7 +750,7 @@ def show_program_selector():
     <style>
         .stApp { background-color: #1A1A2E; }
         #MainMenu, header, footer { visibility: hidden; }
-        .block-container { padding-top: 10vh !important; max-width: 100% !important; }
+        .block-container { padding-top: 8vh !important; max-width: 100% !important; }
         [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) {
             background: white !important;
             border-radius: 16px !important;
@@ -762,16 +762,29 @@ def show_program_selector():
         [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:nth-child(2) span {
             color: #1A1A2E !important;
         }
-        .stButton > button {
-            background-color: #DC1E35 !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 8px !important;
+        .prog-select-btn > button {
+            background: white !important;
+            color: #1A1A2E !important;
+            border: 1.5px solid #E2E8F0 !important;
+            border-radius: 12px !important;
             font-weight: 600 !important;
+            font-size: 0.95rem !important;
+            padding: 0.85rem 1.25rem !important;
             width: 100% !important;
+            text-align: left !important;
+            transition: border-color 0.15s, box-shadow 0.15s !important;
+            margin-bottom: 0.5rem !important;
         }
-        .stButton > button p { color: white !important; }
-        .stButton > button:hover { background-color: #B01829 !important; }
+        .prog-select-btn > button:hover {
+            border-color: #DC1E35 !important;
+            box-shadow: 0 0 0 3px rgba(220,30,53,0.08) !important;
+            background: #FFF8F8 !important;
+            color: #DC1E35 !important;
+        }
+        .prog-select-btn > button p {
+            color: inherit !important;
+            font-size: inherit !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -781,26 +794,30 @@ def show_program_selector():
             logo_b64 = base64.b64encode(f.read()).decode()
         st.markdown(
             f'<div style="text-align:center; margin-bottom:0.5rem;">'
-            f'<img src="data:image/png;base64,{logo_b64}" width="220"></div>',
+            f'<img src="data:image/png;base64,{logo_b64}" width="200"></div>',
             unsafe_allow_html=True
         )
         st.markdown(
-            '<h2 style="text-align:center; color:#1A1A2E; font-size:1.5rem; font-weight:700; margin:0.5rem 0 0.25rem;">Select Your Program</h2>',
+            '<h2 style="text-align:center; color:#1A1A2E; font-size:1.5rem; font-weight:700; margin:0.5rem 0 0.2rem;">Welcome back!</h2>',
             unsafe_allow_html=True
         )
         st.markdown(
-            '<p style="text-align:center; color:#94A3B8; font-size:0.82rem; margin-bottom:1.5rem;">You have multiple programs. Which would you like to view?</p>',
+            '<p style="text-align:center; color:#94A3B8; font-size:0.85rem; margin-bottom:1.75rem; line-height:1.5;">You\'ve completed multiple programs with us.<br>Which program would you like to view?</p>',
             unsafe_allow_html=True
         )
 
         for student in st.session_state.student_records:
             parts = [p.strip() for p in student["name"].split("|")]
-            label = " · ".join(parts[1:]) if len(parts) > 1 else student["name"]
+            cohort = parts[1] if len(parts) > 1 else ""
+            program = parts[2] if len(parts) > 2 else ""
+            label = f"📚  {cohort}   •   {program}" if cohort else student["name"]
+            st.markdown('<div class="prog-select-btn">', unsafe_allow_html=True)
             if st.button(label, key=f"prog_{student['id']}"):
                 st.session_state.student_record = student
                 st.session_state.student_name = student["name"]
                 st.session_state.program_selected = True
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # LOGIN PAGE
