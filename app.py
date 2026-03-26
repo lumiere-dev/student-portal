@@ -540,7 +540,7 @@ def is_overdue(due_date_str, status):
 # Data Functions
 # ──────────────────────────────────────────────
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def get_student_publication_record(tracker_value):
     """Look up the student's record in appOhh4711y4cXSfj/tbluBNu4xfwOWMgr0
     by matching the 'Student Cohort Application Tracker' field value."""
@@ -621,7 +621,7 @@ def _build_student_dict(record, email):
         "publication_marker": fields.get(STUDENT_FIELDS["publication_marker"], []),
     }
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def get_student_by_email(email):
     """Find student by email — returns the first matching record or None."""
     tables = get_tables()
@@ -636,7 +636,7 @@ def get_student_by_email(email):
         st.error(f"Error fetching student: {e}")
     return None
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def get_all_student_records_by_email(email):
     """Find all records for an email — returns a list (students with multiple programs)."""
     tables = get_tables()
@@ -650,7 +650,7 @@ def get_all_student_records_by_email(email):
         st.error(f"Error fetching student records: {e}")
     return []
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def get_deadlines_for_student(student_name):
     """Get all deadlines for a specific student"""
     tables = get_tables()
