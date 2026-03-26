@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 import resend
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import re
+from streamlit_cookies_controller import CookieController
 
 
 def get_secret(key, default=None):
@@ -72,6 +73,17 @@ def verify_magic_token(token, max_age=3600):
     try:
         email = serializer.loads(token, salt="student-magic-link", max_age=max_age)
         return email
+    except (SignatureExpired, BadSignature):
+        return None
+
+def generate_session_token(email):
+    """Generate a long-lived signed token for persistent session cookie"""
+    return get_serializer().dumps(email, salt="student-session")
+
+def verify_session_token(token):
+    """Verify session cookie token (30-day expiry)"""
+    try:
+        return get_serializer().loads(token, salt="student-session", max_age=30 * 24 * 3600)
     except (SignatureExpired, BadSignature):
         return None
 
@@ -424,6 +436,8 @@ if "magic_link_sent" not in st.session_state:
 if "team_unlocked" not in st.session_state:
     st.session_state.team_unlocked = False
 
+cookies = CookieController()
+
 # ──────────────────────────────────────────────
 # Helper Functions
 # ──────────────────────────────────────────────
@@ -654,6 +668,24 @@ def get_deadlines_for_student(student_name):
 # Auth Token Check
 # ──────────────────────────────────────────────
 
+def check_session_cookie():
+    if st.session_state.authenticated:
+        return
+    token = cookies.get("student_session")
+    if token:
+        email = verify_session_token(token)
+        if email:
+            student = get_student_by_email(email)
+            if student:
+                st.session_state.authenticated = True
+                st.session_state.student_name = student["name"]
+                st.session_state.student_email = email
+                st.session_state.student_record = student
+                st.session_state.is_preview = False
+                st.rerun()
+        else:
+            cookies.remove("student_session")
+
 def check_magic_link_token():
     query_params = st.query_params
     if "token" in query_params and not st.session_state.authenticated:
@@ -667,6 +699,7 @@ def check_magic_link_token():
                 st.session_state.student_email = email
                 st.session_state.student_record = student
                 st.session_state.is_preview = False
+                cookies.set("student_session", generate_session_token(email), max_age=timedelta(days=30))
                 st.query_params.clear()
                 st.rerun()
             else:
@@ -894,6 +927,7 @@ def show_dashboard():
             st.rerun()
 
         if st.button("Logout"):
+            cookies.remove("student_session")
             for key in ["authenticated", "student_name", "student_email", "student_record", "is_preview"]:
                 st.session_state[key] = False if key == "authenticated" or key == "is_preview" else None
             st.rerun()
@@ -968,7 +1002,7 @@ def show_student_profile_summary(student):
                     display:flex; align-items:center; justify-content:center;
                     font-size:1.2rem; color:#64748B;">👤</div>
         <div>
-            <div style="font-size:0.85rem; font-weight:700; color:#94A3B8; text-transform:uppercase;
+            <div style="font-size:0.85rem; font-weight:700; color:#1E293B; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.2rem;">Your Mentor</div>
             <div style="font-size:1.15rem; font-weight:700; color:#1E293B; margin-bottom:0.2rem;">{mentor_name}</div>
             {mentor_email_html}
@@ -982,7 +1016,7 @@ def show_student_profile_summary(student):
     with col_a:
         st.markdown(f"""
         <div class="info-card" style="height:100%;">
-            <div style="font-size:0.85rem; font-weight:700; color:#94A3B8; text-transform:uppercase;
+            <div style="font-size:0.85rem; font-weight:700; color:#1E293B; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.4rem;">Revised Final Paper Due</div>
             <div style="font-size:1.25rem; font-weight:700; color:#1E293B;">{format_date(revised_due)}</div>
         </div>
@@ -991,7 +1025,7 @@ def show_student_profile_summary(student):
     with col_b:
         st.markdown(f"""
         <div class="info-card" style="height:100%;">
-            <div style="font-size:0.85rem; font-weight:700; color:#94A3B8; text-transform:uppercase;
+            <div style="font-size:0.85rem; font-weight:700; color:#1E293B; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.75rem;">Meetings Progress</div>
             <div style="background:#E2E8F0; border-radius:999px; height:8px; margin-bottom:0.55rem;">
                 <div style="background:linear-gradient(90deg, #BE1E2D, #8B1520); width:{pct}%;
@@ -1017,12 +1051,12 @@ def show_student_profile_summary(student):
     facts_paragraphs = [p.strip() for p in raw_facts.split("\n") if p.strip()]
     if facts_paragraphs:
         paras_html = "".join(f'<p style="margin:0 0 0.45rem 0;">{p}</p>' for p in facts_paragraphs)
-        pm_facts_html = '<div style="margin-top:0.85rem; border-top:1px solid #F1F5F9; padding-top:0.75rem;"><div style="font-size:0.85rem; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.4rem;">Fun facts about your Program Manager</div><div style="font-size:0.88rem; color:#475569; line-height:1.6;">' + paras_html + '</div></div>'
+        pm_facts_html = '<div style="margin-top:0.85rem; border-top:1px solid #F1F5F9; padding-top:0.75rem;"><div style="font-size:0.85rem; font-weight:700; color:#1E293B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.4rem;">Fun facts about your Program Manager</div><div style="font-size:0.88rem; color:#475569; line-height:1.6;">' + paras_html + '</div></div>'
     else:
         pm_facts_html = ""
     st.markdown(f"""
 <div class="info-card">
-<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Program Manager</div>
+<div style="font-size:0.85rem; font-weight:700; color:#1E293B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Program Manager</div>
 <div style="font-size:1rem; font-weight:600; color:#1E293B; margin-bottom:0.25rem;">{pm_name}</div>
 {pm_email_html}
 <div style="font-size:0.8rem; color:#94A3B8; margin-top:0.4rem; line-height:1.4;">Your main point of contact for program support and escalations.</div>
@@ -1047,7 +1081,7 @@ def show_student_profile_summary(student):
         st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
         st.markdown(f"""
         <div class="info-card">
-            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+            <div style="font-size:0.85rem; font-weight:700; color:#1E293B; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.5rem;">Program Syllabus</div>
             <div style="font-size:0.92rem; color:#475569; line-height:1.55; margin-bottom:0.75rem;">
                 Here is the syllabus shared by your mentor — it outlines what you can expect
@@ -1825,6 +1859,7 @@ def show_resources(student):
 # ──────────────────────────────────────────────
 
 def main():
+    check_session_cookie()
     check_magic_link_token()
 
     if not st.session_state.authenticated:
