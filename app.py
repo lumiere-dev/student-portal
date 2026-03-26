@@ -580,7 +580,7 @@ def get_student_by_email(email):
             fields = record["fields"]
             tracker_value = fields.get(STUDENT_FIELDS["name"], "")
             raw_marker = fields.get(STUDENT_FIELDS["publication_marker"], [])
-            pub_marker = raw_marker[0] if isinstance(raw_marker, list) else raw_marker
+            pub_marker = raw_marker[0] if isinstance(raw_marker, list) and raw_marker else raw_marker
             if pub_marker == "Yes":
                 application = get_student_publication_record(tracker_value)
                 app_fields = application["fields"] if application else {}
