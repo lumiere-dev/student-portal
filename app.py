@@ -948,14 +948,18 @@ def show_login_page():
 
                 if preview_submitted and preview_email:
                     with st.spinner("Loading student..."):
-                        student = get_student_by_email(preview_email)
-                    if student:
+                        students = get_all_student_records_by_email(preview_email)
+                    if students:
                         st.session_state.authenticated = True
-                        st.session_state.student_name = student["name"]
                         st.session_state.student_email = preview_email
-                        st.session_state.student_record = student
                         st.session_state.is_preview = True
-                        st.session_state.program_selected = True
+                        st.session_state.student_records = students
+                        if len(students) == 1:
+                            st.session_state.student_record = students[0]
+                            st.session_state.student_name = students[0]["name"]
+                            st.session_state.program_selected = True
+                        else:
+                            st.session_state.program_selected = False
                         st.rerun()
                     else:
                         st.error("Student email not found.")
