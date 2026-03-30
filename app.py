@@ -163,7 +163,8 @@ STUDENT_FIELDS = {
     "publication_specialist_email": "Publication Specialist Email",
     "publication_outcome": "PS: Latest Publication Outcome - (latest)",
     "submission_portal": "Student Submission Portal Lookup",
-    "publication_marker": "Publication Marker"
+    "publication_marker": "Publication Marker",
+    "white_label_or_partner": "White Label or Partner Payment Program"
 }
 
 DEADLINE_FIELDS = {
@@ -619,6 +620,7 @@ def _build_student_dict(record, email):
         "quiz_2_status": app_fields.get("Checkpoint: Quiz 2 Status (Automated)", ""),
         "quiz_3_status": app_fields.get("Checkpoint: Quiz 3 Status (Automated)", ""),
         "publication_marker": fields.get(STUDENT_FIELDS["publication_marker"], []),
+        "white_label_or_partner": fields.get(STUDENT_FIELDS["white_label_or_partner"], ""),
     }
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -949,7 +951,9 @@ def show_login_page():
                 if submitted and email:
                     student = get_student_by_email(email)
                     if student:
-                        if send_magic_link(email, student["name"]):
+                        if student.get("white_label_or_partner"):
+                            st.error("This portal is not available for your program. Please contact your program manager.")
+                        elif send_magic_link(email, student["name"]):
                             st.session_state.magic_link_sent = True
                             st.rerun()
                     else:
@@ -968,17 +972,23 @@ def show_login_page():
                     with st.spinner("Loading student..."):
                         students = get_all_student_records_by_email(preview_email)
                     if students:
-                        st.session_state.authenticated = True
-                        st.session_state.student_email = preview_email
-                        st.session_state.is_preview = True
-                        st.session_state.student_records = students
-                        if len(students) == 1:
-                            st.session_state.student_record = students[0]
-                            st.session_state.student_name = students[0]["name"]
-                            st.session_state.program_selected = True
+                        is_restricted = any(
+                            s.get("white_label_or_partner") for s in students
+                        )
+                        if is_restricted:
+                            st.error("Cannot preview: this student is enrolled in a White Label or Partner Payment Program and does not have access to this portal.")
                         else:
-                            st.session_state.program_selected = False
-                        st.rerun()
+                            st.session_state.authenticated = True
+                            st.session_state.student_email = preview_email
+                            st.session_state.is_preview = True
+                            st.session_state.student_records = students
+                            if len(students) == 1:
+                                st.session_state.student_record = students[0]
+                                st.session_state.student_name = students[0]["name"]
+                                st.session_state.program_selected = True
+                            else:
+                                st.session_state.program_selected = False
+                            st.rerun()
                     else:
                         st.error("Student email not found.")
 
