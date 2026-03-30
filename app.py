@@ -953,7 +953,8 @@ def show_login_page():
                 submitted = st.form_submit_button("Send Magic Link", use_container_width=True)
 
                 if submitted and email:
-                    all_records = get_all_student_records_by_email(email)
+                    with st.spinner("Looking up your account — this may take a few seconds..."):
+                        all_records = get_all_student_records_by_email(email)
                     accessible = filter_accessible_records(all_records)
                     if accessible:
                         if send_magic_link(email, accessible[0]["name"]):
@@ -974,7 +975,7 @@ def show_login_page():
                 preview_submitted = st.form_submit_button("Preview as Student", use_container_width=True)
 
                 if preview_submitted and preview_email:
-                    with st.spinner("Loading student..."):
+                    with st.spinner("Looking up student — this may take a few seconds..."):
                         all_records = get_all_student_records_by_email(preview_email)
                     accessible = filter_accessible_records(all_records)
                     if accessible:
