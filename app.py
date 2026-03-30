@@ -698,7 +698,7 @@ def check_session_cookie():
     if token:
         email = verify_session_token(token)
         if email:
-            students = get_all_student_records_by_email(email)
+            students = filter_accessible_records(get_all_student_records_by_email(email))
             if students:
                 st.session_state.authenticated = True
                 st.session_state.student_email = email
@@ -720,7 +720,7 @@ def check_magic_link_token():
         token = query_params["token"]
         email = verify_magic_token(token)
         if email:
-            students = get_all_student_records_by_email(email)
+            students = filter_accessible_records(get_all_student_records_by_email(email))
             if students:
                 st.session_state.authenticated = True
                 st.session_state.student_email = email
@@ -746,6 +746,10 @@ def check_magic_link_token():
 # ──────────────────────────────────────────────
 # PROGRAM SELECTOR
 # ──────────────────────────────────────────────
+
+def filter_accessible_records(students):
+    """Remove records where White Label or Partner Payment Program is set."""
+    return [s for s in students if not s.get("white_label_or_partner")]
 
 def show_program_selector():
     import base64
@@ -949,13 +953,14 @@ def show_login_page():
                 submitted = st.form_submit_button("Send Magic Link", use_container_width=True)
 
                 if submitted and email:
-                    student = get_student_by_email(email)
-                    if student:
-                        if student.get("white_label_or_partner"):
-                            st.error("This portal is not available for your program. Please contact your program manager.")
-                        elif send_magic_link(email, student["name"]):
+                    all_records = get_all_student_records_by_email(email)
+                    accessible = filter_accessible_records(all_records)
+                    if accessible:
+                        if send_magic_link(email, accessible[0]["name"]):
                             st.session_state.magic_link_sent = True
                             st.rerun()
+                    elif all_records:
+                        st.error("This portal is not available for your program. Please contact your program manager.")
                     else:
                         st.error("Email not found. Please check your email address.")
 
@@ -970,25 +975,22 @@ def show_login_page():
 
                 if preview_submitted and preview_email:
                     with st.spinner("Loading student..."):
-                        students = get_all_student_records_by_email(preview_email)
-                    if students:
-                        is_restricted = any(
-                            s.get("white_label_or_partner") for s in students
-                        )
-                        if is_restricted:
-                            st.error("Cannot preview: this student is enrolled in a White Label or Partner Payment Program and does not have access to this portal.")
+                        all_records = get_all_student_records_by_email(preview_email)
+                    accessible = filter_accessible_records(all_records)
+                    if accessible:
+                        st.session_state.authenticated = True
+                        st.session_state.student_email = preview_email
+                        st.session_state.is_preview = True
+                        st.session_state.student_records = accessible
+                        if len(accessible) == 1:
+                            st.session_state.student_record = accessible[0]
+                            st.session_state.student_name = accessible[0]["name"]
+                            st.session_state.program_selected = True
                         else:
-                            st.session_state.authenticated = True
-                            st.session_state.student_email = preview_email
-                            st.session_state.is_preview = True
-                            st.session_state.student_records = students
-                            if len(students) == 1:
-                                st.session_state.student_record = students[0]
-                                st.session_state.student_name = students[0]["name"]
-                                st.session_state.program_selected = True
-                            else:
-                                st.session_state.program_selected = False
-                            st.rerun()
+                            st.session_state.program_selected = False
+                        st.rerun()
+                    elif all_records:
+                        st.error("Cannot preview: this student is only enrolled in White Label or Partner Payment Programs and does not have access to this portal.")
                     else:
                         st.error("Student email not found.")
 
