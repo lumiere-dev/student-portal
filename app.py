@@ -1647,7 +1647,7 @@ def show_publication_program(student):
     st.markdown(
         f'<div class="info-card" style="margin-bottom:1rem; display:flex; align-items:center; gap:1rem;">'
         f'<div style="background:#F1F5F9; border-radius:50%; width:44px; height:44px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#64748B;">👤</div>'
-        f'<div><div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.2rem;">Your Publication Specialist</div>'
+        f'<div><div style="font-size:0.72rem; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.2rem;">Your Publication Specialist</div>'
         f'<div style="font-size:1.15rem; font-weight:700; color:#1E293B; margin-bottom:0.2rem;">{specialist}</div>'
         f'{specialist_email_line}'
         f'<div style="font-size:0.8rem; color:#94A3B8; margin-top:0.4rem;">Your go-to contact for all things publication — reach out with any questions about journal selection, submission, or reviewer feedback.</div>'
@@ -1660,7 +1660,7 @@ def show_publication_program(student):
     with col_a:
         st.markdown(f"""
         <div class="info-card" style="height:100%;">
-            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+            <div style="font-size:0.72rem; font-weight:700; color:#94A3B8; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.4rem;">Publication Target</div>
             <div style="font-size:1.1rem; font-weight:700; color:#1E293B; margin-bottom:0.3rem;">{target}</div>
             <div style="font-size:0.8rem; color:#94A3B8;">The journal or outlet you are aiming to publish your research in.</div>
@@ -1671,7 +1671,7 @@ def show_publication_program(student):
         if outcome_message:
             st.markdown(
                 f'<div class="info-card" style="height:100%; background:{outcome_bg}; border-left:3px solid {outcome_color};">'
-                f'<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.4rem;">Latest Publication Outcome</div>'
+                f'<div style="font-size:0.72rem; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.4rem;">Latest Publication Outcome</div>'
                 f'<div style="font-size:0.88rem; color:#1E293B; line-height:1.55;">{outcome_message}</div>'
                 f'</div>',
                 unsafe_allow_html=True
@@ -1679,7 +1679,7 @@ def show_publication_program(student):
         else:
             st.markdown(f"""
             <div class="info-card" style="height:100%;">
-                <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+                <div style="font-size:0.72rem; font-weight:700; color:#94A3B8; text-transform:uppercase;
                             letter-spacing:0.05em; margin-bottom:0.4rem;">Latest Publication Outcome</div>
                 <div style="font-size:0.88rem; color:#94A3B8;">No update yet — check back later.</div>
             </div>
@@ -1687,10 +1687,12 @@ def show_publication_program(student):
 
     st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
 
-    # Target resources — only render links that exist
+    # Target resources — always show Workshop 1; show others only if set in Airtable
+    WORKSHOP_1_URL = "https://us06web.zoom.us/rec/share/oDDE86O8mqbRv2N9FNms5ATIlxzqF-3zl3EyZkno5M-duawenv6E-yBQ6RwVWNZz.jolPyUGFJtbRvbC0"
     resource_links = [
-        ("Target Submission Workshop", submission_workshop),
-        ("Target Intro Workshop", intro_workshop),
+        ("Publication Workshop 1 - Introduction to Publication", WORKSHOP_1_URL),
+        ("Publication Workshop 2 - Introduction to Journal Target", intro_workshop),
+        ("Publication Workshop 3 - Journal Submission Prep", submission_workshop),
         ("Target One-Pager", one_pager),
     ]
     available = [(label, url) for label, url in resource_links if url]
@@ -1704,7 +1706,7 @@ def show_publication_program(student):
         ])
         st.markdown(f"""
         <div class="info-card" style="margin-bottom:1rem;">
-            <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+            <div style="font-size:0.72rem; font-weight:700; color:#94A3B8; text-transform:uppercase;
                         letter-spacing:0.05em; margin-bottom:0.3rem;">Target Resources</div>
             <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.65rem;">Workshops and materials curated specifically for your target publication.</div>
             <div style="display:flex; flex-wrap:wrap;">{links_html}</div>
@@ -1713,7 +1715,7 @@ def show_publication_program(student):
 
     st.markdown(f"""
     <div class="info-card">
-        <div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase;
+        <div style="font-size:0.72rem; font-weight:700; color:#94A3B8; text-transform:uppercase;
                     letter-spacing:0.05em; margin-bottom:0.3rem;">Quiz Checkpoints</div>
         <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.85rem;">Track your progress through the publication program quizzes.</div>
         <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
