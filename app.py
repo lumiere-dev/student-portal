@@ -622,7 +622,7 @@ def _build_student_dict(record, email):
         "quiz_3_status": app_fields.get("Checkpoint: Quiz 3 Status (Automated)", ""),
         "publication_marker": fields.get(STUDENT_FIELDS["publication_marker"], []),
         "white_label_or_partner": fields.get(STUDENT_FIELDS["white_label_or_partner"], ""),
-        "program_status": fields.get(STUDENT_FIELDS["program_status"], ""),
+        "program_status": unwrap(fields.get(STUDENT_FIELDS["program_status"], "")),
     }
 
 @st.cache_data(ttl=3600, show_spinner=False)
