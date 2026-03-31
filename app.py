@@ -1629,7 +1629,7 @@ def show_publication_program(student):
         "revise and resubmit": ("Your target journal has requested that you make some edits to your paper and then resubmit it. This is a really positive sign that the journal is interested in publishing your work! Please make sure you are in touch with your publication specialist about how to tackle these revisions.", "#2563EB", "#EFF6FF"),
         "student suspended": ("We have suspended your publication support due to lack of response. Please reach out to your publication specialist if you would like to reinstate publication support.", "#DC2626", "#FEF2F2"),
         "student withdrew": ("You have decided not to pursue publication at this time. If you change your mind and would like to resume working actively towards publication please reach out to your publication specialist.", "#64748B", "#F8FAFC"),
-        "sumbitted rfp - unsubmitted to pub": ("Congratulations on submitting your revised final paper! Your next step is to submit your work to your target journal. Please make sure you are in touch with your publication specialist as they will help you coordinate this submission.", "#16A34A", "#F0FDF4"),
+        "submitted rfp, unsubmitted to pub": ("Congratulations on submitting your revised final paper! Your next step is to submit your work to your target journal. Please make sure you are in touch with your publication specialist as they will help you coordinate this submission.", "#16A34A", "#F0FDF4"),
         "submitted to pub": ("Your paper has been submitted to your target journal, well done! You now need to wait for the journal to get back to you with feedback. Please remember to update your publication specialist as soon as you receive an update!", "#16A34A", "#F0FDF4"),
     }
     outcome_key = outcome.strip().lower()
@@ -1713,6 +1713,7 @@ def show_publication_program(student):
         </div>
         """, unsafe_allow_html=True)
 
+    quizzes_incomplete = not (quiz_1 and quiz_2 and quiz_3)
     st.markdown(f"""
     <div class="info-card">
         <div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase;
@@ -1730,6 +1731,20 @@ def show_publication_program(student):
                 for label, v in [("Quiz 1", quiz_1), ("Quiz 2", quiz_2), ("Quiz 3", quiz_3)]
             ])}
         </div>
+        {"" if not quizzes_incomplete else """
+        <div style="margin-top:0.85rem; display:flex; align-items:center; justify-content:space-between;
+                    flex-wrap:wrap; gap:0.65rem; background:#FFF7ED; border:1px solid #FED7AA;
+                    border-radius:8px; padding:0.6rem 0.85rem;">
+            <div style="font-size:0.85rem; color:#92400E;">
+                Haven't completed your quizzes yet? Here's the link!
+            </div>
+            <a href="https://airtable.com/shrgP2sLhOCV40Ok9" target="_blank"
+               style="display:inline-flex; align-items:center; gap:0.35rem; background:#BE1E2D;
+                      color:white; text-decoration:none; padding:0.4rem 0.85rem;
+                      border-radius:6px; font-size:0.82rem; font-weight:600; white-space:nowrap;">
+                Take the Quizzes →
+            </a>
+        </div>"""}
     </div>
     """, unsafe_allow_html=True)
 
