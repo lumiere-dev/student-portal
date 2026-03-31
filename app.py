@@ -1724,19 +1724,11 @@ def show_publication_program(student):
         f'</div>'
         for label, v in [("Quiz 1", quiz_1), ("Quiz 2", quiz_2), ("Quiz 3", quiz_3)]
     ])
-    st.markdown(f"""
-    <div class="info-card">
-        <div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase;
-                    letter-spacing:0.05em; margin-bottom:0.3rem;">Quiz Checkpoints</div>
-        <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.85rem;">Track your progress through the publication program quizzes.</div>
-        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">{quiz_chips}</div>
-    </div>
-    """, unsafe_allow_html=True)
     if quizzes_incomplete:
         st.markdown("""
         <div style="display:flex; align-items:center; justify-content:space-between;
                     flex-wrap:wrap; gap:0.65rem; background:#FFF7ED; border:1px solid #FED7AA;
-                    border-radius:8px; padding:0.6rem 0.85rem; margin-top:0.5rem;">
+                    border-radius:8px; padding:0.6rem 0.85rem; margin-bottom:0.5rem;">
             <div style="font-size:0.85rem; color:#92400E;">
                 Haven't completed your quizzes yet? Here's the link!
             </div>
@@ -1748,6 +1740,14 @@ def show_publication_program(student):
             </a>
         </div>
         """, unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="info-card">
+        <div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase;
+                    letter-spacing:0.05em; margin-bottom:0.3rem;">Quiz Checkpoints</div>
+        <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.85rem;">Track your progress through the publication program quizzes.</div>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">{quiz_chips}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: Writing Center
