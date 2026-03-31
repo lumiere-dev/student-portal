@@ -1122,7 +1122,7 @@ def show_student_profile_summary(student):
         ("suspended", "#DC2626", "#FEF2F2", "#FECACA", "⚠️", "Your program has been suspended. Please reach out to your Program Manager to discuss next steps."),
     ]
     program_status = (student.get("program_status") or "").strip().lower()
-    matched_banner = next(((txt_color, bg, border_color, icon, msg) for key, txt_color, bg, border_color, icon, msg in STATUS_BANNERS if program_status.startswith(key)), None)
+    matched_banner = next(((txt_color, bg, border_color, icon, msg) for key, txt_color, bg, border_color, icon, msg in STATUS_BANNERS if key in program_status), None)
     if matched_banner:
         txt_color, bg, border_color, icon, msg = matched_banner
         st.markdown(
