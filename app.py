@@ -1115,15 +1115,16 @@ def show_student_profile_summary(student):
     </div>
     """, unsafe_allow_html=True)
 
-    STATUS_BANNERS = {
-        "program pause": ("#92400E", "#FFF7ED", "#FED7AA", "⏸️", "Your program is currently paused. If you have any questions or would like to resume, please reach out to your Program Manager."),
-        "completed": ("#166534", "#F0FDF4", "#86EFAC", "🎉", "Woohoo! Congratulations on completing your program! We hope you had a fantastic experience with us."),
-        "withdrawn": ("#64748B", "#F8FAFC", "#E2E8F0", "📋", "You have withdrawn from the program. If you'd like to discuss re-enrolling or have any questions, please reach out to your Program Manager."),
-        "suspended": ("#DC2626", "#FEF2F2", "#FECACA", "⚠️", "Your program has been suspended. Please reach out to your Program Manager to discuss next steps."),
-    }
+    STATUS_BANNERS = [
+        ("program pause", "#92400E", "#FFF7ED", "#FED7AA", "⏸️", "Your program is currently paused. If you have any questions or would like to resume, please reach out to your Program Manager."),
+        ("completed", "#166534", "#F0FDF4", "#86EFAC", "🎉", "Woohoo! Congratulations on completing your program! We hope you had a fantastic experience with us."),
+        ("withdrawn", "#64748B", "#F8FAFC", "#E2E8F0", "📋", "You have withdrawn from the program. If you'd like to discuss re-enrolling or have any questions, please reach out to your Program Manager."),
+        ("suspended", "#DC2626", "#FEF2F2", "#FECACA", "⚠️", "Your program has been suspended. Please reach out to your Program Manager to discuss next steps."),
+    ]
     program_status = (student.get("program_status") or "").strip().lower()
-    if program_status in STATUS_BANNERS:
-        txt_color, bg, border_color, icon, msg = STATUS_BANNERS[program_status]
+    matched_banner = next(((txt_color, bg, border_color, icon, msg) for key, txt_color, bg, border_color, icon, msg in STATUS_BANNERS if program_status.startswith(key)), None)
+    if matched_banner:
+        txt_color, bg, border_color, icon, msg = matched_banner
         st.markdown(
             f'<div style="background:{bg}; border:1px solid {border_color}; border-radius:8px; '
             f'padding:0.75rem 1rem; margin-bottom:1rem; display:flex; align-items:flex-start; gap:0.65rem;">'
