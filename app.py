@@ -1724,11 +1724,12 @@ def show_publication_program(student):
         f'</div>'
         for label, v in [("Quiz 1", quiz_1), ("Quiz 2", quiz_2), ("Quiz 3", quiz_3)]
     ])
+    quiz_bubble = ""
     if quizzes_incomplete:
-        st.markdown("""
-        <div style="display:flex; align-items:center; justify-content:space-between;
-                    flex-wrap:wrap; gap:0.65rem; background:#FFF7ED; border:1px solid #FED7AA;
-                    border-radius:8px; padding:0.6rem 0.85rem; margin-bottom:0.5rem;">
+        quiz_bubble = """
+        <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
+                    gap:0.5rem; background:#FFF7ED; border:1px solid #FED7AA;
+                    border-radius:8px; padding:0.6rem 0.85rem;">
             <div style="font-size:0.85rem; color:#92400E;">
                 Haven't completed your quizzes yet? Here's the link!
             </div>
@@ -1738,14 +1739,16 @@ def show_publication_program(student):
                       border-radius:6px; font-size:0.82rem; font-weight:600; white-space:nowrap;">
                 Take the Quizzes →
             </a>
-        </div>
-        """, unsafe_allow_html=True)
+        </div>"""
     st.markdown(f"""
-    <div class="info-card">
-        <div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase;
-                    letter-spacing:0.05em; margin-bottom:0.3rem;">Quiz Checkpoints</div>
-        <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.85rem;">Track your progress through the publication program quizzes.</div>
-        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">{quiz_chips}</div>
+    <div style="display:flex; gap:0.75rem; align-items:stretch; flex-wrap:wrap;">
+        <div class="info-card" style="flex:1; min-width:0;">
+            <div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase;
+                        letter-spacing:0.05em; margin-bottom:0.3rem;">Quiz Checkpoints</div>
+            <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.85rem;">Track your progress through the publication program quizzes.</div>
+            <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">{quiz_chips}</div>
+        </div>
+        {quiz_bubble}
     </div>
     """, unsafe_allow_html=True)
 
