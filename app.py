@@ -1724,33 +1724,16 @@ def show_publication_program(student):
         f'</div>'
         for label, v in [("Quiz 1", quiz_1), ("Quiz 2", quiz_2), ("Quiz 3", quiz_3)]
     ])
-    quiz_bubble = ""
     if quizzes_incomplete:
-        quiz_bubble = """
-        <div style="flex-shrink:0; display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
-                    gap:0.5rem; background:#FFF7ED; border:1px solid #FED7AA;
-                    border-radius:8px; padding:0.6rem 0.85rem;">
-            <div style="font-size:0.85rem; color:#92400E;">
-                Haven't completed your quizzes yet? Here's the link!
-            </div>
-            <a href="https://airtable.com/shrgP2sLhOCV40Ok9" target="_blank"
-               style="display:inline-flex; align-items:center; gap:0.35rem; background:#BE1E2D;
-                      color:white; text-decoration:none; padding:0.4rem 0.85rem;
-                      border-radius:6px; font-size:0.82rem; font-weight:600; white-space:nowrap;">
-                Take the Quizzes →
-            </a>
-        </div>"""
-    st.markdown(f"""
-    <div style="display:flex; gap:0.75rem; align-items:stretch; flex-wrap:wrap;">
-        <div class="info-card" style="flex:1; min-width:0;">
-            <div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase;
-                        letter-spacing:0.05em; margin-bottom:0.3rem;">Quiz Checkpoints</div>
-            <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.85rem;">Track your progress through the publication program quizzes.</div>
-            <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">{quiz_chips}</div>
-        </div>
-        {quiz_bubble}
-    </div>
-    """, unsafe_allow_html=True)
+        col_quiz, col_bubble = st.columns([3, 2])
+    else:
+        col_quiz = st.columns(1)[0]
+        col_bubble = None
+    with col_quiz:
+        st.markdown(f'<div class="info-card"><div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.3rem;">Quiz Checkpoints</div><div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.85rem;">Track your progress through the publication program quizzes.</div><div style="display:flex; gap:0.75rem; flex-wrap:wrap;">{quiz_chips}</div></div>', unsafe_allow_html=True)
+    if col_bubble:
+        with col_bubble:
+            st.markdown('<div class="info-card" style="background:#FFF7ED; border:1px solid #FED7AA; height:100%;"><div style="font-size:0.85rem; color:#92400E; margin-bottom:0.5rem;">Haven\'t completed your quizzes yet? Here\'s the link!</div><a href="https://airtable.com/shrgP2sLhOCV40Ok9" target="_blank" style="display:inline-flex; align-items:center; gap:0.35rem; background:#BE1E2D; color:white; text-decoration:none; padding:0.4rem 0.85rem; border-radius:6px; font-size:0.82rem; font-weight:600; white-space:nowrap;">Take the Quizzes →</a></div>', unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: Writing Center
