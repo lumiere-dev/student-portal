@@ -164,7 +164,8 @@ STUDENT_FIELDS = {
     "publication_outcome": "PS: Latest Publication Outcome - (latest)",
     "submission_portal": "Student Submission Portal Lookup",
     "publication_marker": "Publication Marker",
-    "white_label_or_partner": "White Label or Partner Payment Program"
+    "white_label_or_partner": "White Label or Partner Payment Program",
+    "program_status": "PM: Student Status in Program"
 }
 
 DEADLINE_FIELDS = {
@@ -621,6 +622,7 @@ def _build_student_dict(record, email):
         "quiz_3_status": app_fields.get("Checkpoint: Quiz 3 Status (Automated)", ""),
         "publication_marker": fields.get(STUDENT_FIELDS["publication_marker"], []),
         "white_label_or_partner": fields.get(STUDENT_FIELDS["white_label_or_partner"], ""),
+        "program_status": fields.get(STUDENT_FIELDS["program_status"], ""),
     }
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -1112,6 +1114,24 @@ def show_student_profile_summary(student):
         roadblocks in your program.
     </div>
     """, unsafe_allow_html=True)
+
+    STATUS_BANNERS = {
+        "program pause": ("#92400E", "#FFF7ED", "#FED7AA", "⏸️", "Your program is currently paused. If you have any questions or would like to resume, please reach out to your Program Manager."),
+        "completed": ("#166534", "#F0FDF4", "#86EFAC", "🎉", "Woohoo! Congratulations on completing your program! We hope you had a fantastic experience with us."),
+        "withdrawn": ("#64748B", "#F8FAFC", "#E2E8F0", "📋", "You have withdrawn from the program. If you'd like to discuss re-enrolling or have any questions, please reach out to your Program Manager."),
+        "suspended": ("#DC2626", "#FEF2F2", "#FECACA", "⚠️", "Your program has been suspended. Please reach out to your Program Manager to discuss next steps."),
+    }
+    program_status = (student.get("program_status") or "").strip().lower()
+    if program_status in STATUS_BANNERS:
+        txt_color, bg, border_color, icon, msg = STATUS_BANNERS[program_status]
+        st.markdown(
+            f'<div style="background:{bg}; border:1px solid {border_color}; border-radius:8px; '
+            f'padding:0.75rem 1rem; margin-bottom:1rem; display:flex; align-items:flex-start; gap:0.65rem;">'
+            f'<span style="font-size:1.1rem;">{icon}</span>'
+            f'<div style="font-size:0.88rem; color:{txt_color}; line-height:1.55;">{msg}</div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
 
     mentor_name = student.get("mentor") or "Not yet assigned"
     mentor_email = student.get("mentor_email") or ""
@@ -1618,7 +1638,7 @@ def show_publication_program(student):
 
     specialist = student.get("publication_specialist") or "Not yet assigned"
     specialist_email = student.get("publication_specialist_email") or ""
-    target = student.get("publication_target") or "Not yet set"
+    target = student.get("publication_target") or ""
     outcome = student.get("publication_outcome") or ""
 
     OUTCOME_MESSAGES = {
@@ -1658,14 +1678,10 @@ def show_publication_program(student):
     col_a, col_b = st.columns(2)
 
     with col_a:
-        st.markdown(f"""
-        <div class="info-card" style="height:100%;">
-            <div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase;
-                        letter-spacing:0.05em; margin-bottom:0.4rem;">Publication Target</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#1E293B; margin-bottom:0.3rem;">{target}</div>
-            <div style="font-size:0.8rem; color:#94A3B8;">The journal or outlet you are aiming to publish your research in.</div>
-        </div>
-        """, unsafe_allow_html=True)
+        if target:
+            st.markdown(f'<div class="info-card" style="height:100%;"><div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.4rem;">Publication Target</div><div style="font-size:1.1rem; font-weight:700; color:#1E293B; margin-bottom:0.3rem;">{target}</div><div style="font-size:0.8rem; color:#94A3B8;">The journal or outlet you are aiming to publish your research in.</div></div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="info-card" style="height:100%;"><div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.4rem;">Publication Target</div><div style="font-size:0.88rem; color:#94A3B8; line-height:1.55;">No target selected yet — please reach out to your Publication Specialist if you need help selecting your target journal.</div></div>', unsafe_allow_html=True)
 
     with col_b:
         if outcome_message:
@@ -1687,31 +1703,35 @@ def show_publication_program(student):
 
     st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
 
-    # Target resources — always show Workshop 1; show others only if set in Airtable
+    # Workshop 1 — always visible
     WORKSHOP_1_URL = "https://us06web.zoom.us/rec/share/oDDE86O8mqbRv2N9FNms5ATIlxzqF-3zl3EyZkno5M-duawenv6E-yBQ6RwVWNZz.jolPyUGFJtbRvbC0"
-    resource_links = [
-        ("Publication Workshop 1 - Introduction to Publication", WORKSHOP_1_URL),
+    st.markdown(
+        f'<div class="info-card" style="margin-bottom:1rem;">'
+        f'<div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.3rem;">Introduction to Publication</div>'
+        f'<div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.65rem;">Start here — this workshop introduces you to the publication process and what to expect as you work towards submitting your research.</div>'
+        f'<a href="{WORKSHOP_1_URL}" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; background:#F8F9FA; border:1px solid #E2E8F0; border-radius:6px; padding:0.45rem 0.85rem; font-size:0.88rem; font-weight:600; color:#BE1E2D; text-decoration:none;">🔗 Publication Workshop 1 - Introduction to Publication</a>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
+
+    # Target resources — only show if at least one target-specific resource is set
+    target_resource_links = [
         ("Publication Workshop 2 - Introduction to Journal Target", intro_workshop),
         ("Publication Workshop 3 - Journal Submission Prep", submission_workshop),
         ("Target One-Pager", one_pager),
     ]
-    available = [(label, url) for label, url in resource_links if url]
-    if available:
+    target_available = [(label, url) for label, url in target_resource_links if url]
+    if target_available:
         links_html = "".join([
             f'<a href="{url}" target="_blank" '
             f'style="display:inline-flex; align-items:center; gap:0.4rem; background:#F8F9FA; '
             f'border:1px solid #E2E8F0; border-radius:6px; padding:0.45rem 0.85rem; '
             f'font-size:0.88rem; font-weight:600; color:#BE1E2D; text-decoration:none; margin-right:0.5rem; margin-bottom:0.5rem;">🔗 {label}</a>'
-            for label, url in available
+            for label, url in target_available
         ])
-        st.markdown(f"""
-        <div class="info-card" style="margin-bottom:1rem;">
-            <div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase;
-                        letter-spacing:0.05em; margin-bottom:0.3rem;">Target Resources</div>
-            <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.65rem;">Workshops and materials curated specifically for your target publication.</div>
-            <div style="display:flex; flex-wrap:wrap;">{links_html}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="info-card" style="margin-bottom:1rem;"><div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.3rem;">Target Resources</div><div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.65rem;">Workshops and materials curated specifically for your target publication.</div><div style="display:flex; flex-wrap:wrap;">{links_html}</div></div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="info-card" style="margin-bottom:1rem;"><div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.3rem;">Target Resources</div><div style="font-size:0.88rem; color:#94A3B8; line-height:1.55;">Your target-specific resources will appear here once you finalize your target journal.</div></div>', unsafe_allow_html=True)
 
     quizzes_incomplete = not (quiz_1 and quiz_2 and quiz_3)
     quiz_chips = "".join([
