@@ -1714,27 +1714,29 @@ def show_publication_program(student):
         """, unsafe_allow_html=True)
 
     quizzes_incomplete = not (quiz_1 and quiz_2 and quiz_3)
+    quiz_chips = "".join([
+        f'<div style="display:flex; align-items:center; gap:0.5rem; background:{"#F0FDF4" if v else "#F8FAFC"}; '
+        f'border:1px solid {"#86EFAC" if v else "#E2E8F0"}; border-radius:8px; padding:0.5rem 0.85rem;">'
+        f'<div style="width:1.25rem; height:1.25rem; border-radius:50%; background:{"#16A34A" if v else "#CBD5E1"}; '
+        f'color:white; font-size:0.75rem; font-weight:700; display:flex; align-items:center; justify-content:center;">{"✓" if v else "–"}</div>'
+        f'<div><div style="font-size:0.82rem; font-weight:600; color:#1E293B;">{label}</div>'
+        f'<div style="font-size:0.75rem; color:{"#16A34A" if v else "#94A3B8"};">{"Submitted" if v else "Not submitted"}</div></div>'
+        f'</div>'
+        for label, v in [("Quiz 1", quiz_1), ("Quiz 2", quiz_2), ("Quiz 3", quiz_3)]
+    ])
     st.markdown(f"""
     <div class="info-card">
         <div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase;
                     letter-spacing:0.05em; margin-bottom:0.3rem;">Quiz Checkpoints</div>
         <div style="font-size:0.8rem; color:#94A3B8; margin-bottom:0.85rem;">Track your progress through the publication program quizzes.</div>
-        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
-            {"".join([
-                f'<div style="display:flex; align-items:center; gap:0.5rem; background:{"#F0FDF4" if v else "#F8FAFC"}; '
-                f'border:1px solid {"#86EFAC" if v else "#E2E8F0"}; border-radius:8px; padding:0.5rem 0.85rem;">'
-                f'<div style="width:1.25rem; height:1.25rem; border-radius:50%; background:{"#16A34A" if v else "#CBD5E1"}; '
-                f'color:white; font-size:0.75rem; font-weight:700; display:flex; align-items:center; justify-content:center;">{"✓" if v else "–"}</div>'
-                f'<div><div style="font-size:0.82rem; font-weight:600; color:#1E293B;">{label}</div>'
-                f'<div style="font-size:0.75rem; color:{"#16A34A" if v else "#94A3B8"};">{"Submitted" if v else "Not submitted"}</div></div>'
-                f'</div>'
-                for label, v in [("Quiz 1", quiz_1), ("Quiz 2", quiz_2), ("Quiz 3", quiz_3)]
-            ])}
-        </div>
-        {"" if not quizzes_incomplete else """
-        <div style="margin-top:0.85rem; display:flex; align-items:center; justify-content:space-between;
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">{quiz_chips}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    if quizzes_incomplete:
+        st.markdown("""
+        <div style="display:flex; align-items:center; justify-content:space-between;
                     flex-wrap:wrap; gap:0.65rem; background:#FFF7ED; border:1px solid #FED7AA;
-                    border-radius:8px; padding:0.6rem 0.85rem;">
+                    border-radius:8px; padding:0.6rem 0.85rem; margin-top:0.5rem;">
             <div style="font-size:0.85rem; color:#92400E;">
                 Haven't completed your quizzes yet? Here's the link!
             </div>
@@ -1744,9 +1746,8 @@ def show_publication_program(student):
                       border-radius:6px; font-size:0.82rem; font-weight:600; white-space:nowrap;">
                 Take the Quizzes →
             </a>
-        </div>"""}
-    </div>
-    """, unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────
 # VIEW: Writing Center
