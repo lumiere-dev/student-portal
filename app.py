@@ -1085,6 +1085,27 @@ def show_dashboard():
     </div>
     """, unsafe_allow_html=True)
 
+    # ── Program status banner (shown on all pages) ──
+    STATUS_BANNERS = [
+        ("program paused", "#92400E", "#FFF7ED", "#FED7AA", "⏸️", "Your program is currently paused. If you have any questions or would like to resume, please reach out to your Program Manager."),
+        ("completed", "#166534", "#F0FDF4", "#86EFAC", "🎉", "Woohoo! Congratulations on completing your program! We hope you had a fantastic experience with us."),
+        ("withdrawn", "#64748B", "#F8FAFC", "#E2E8F0", "📋", "You have withdrawn from the program. If you'd like to discuss re-enrolling or have any questions, please reach out to your Program Manager."),
+        ("suspended", "#DC2626", "#FEF2F2", "#FECACA", "⚠️", "Your program has been suspended. Please reach out to your Program Manager to discuss next steps."),
+    ]
+    program_status = (student.get("program_status") or "").strip().lower()
+    matched_banner = next(((txt_color, bg, border_color, icon, msg) for key, txt_color, bg, border_color, icon, msg in STATUS_BANNERS if key in program_status), None)
+    if matched_banner:
+        txt_color, bg, border_color, icon, msg = matched_banner
+        st.markdown(
+            f'<div style="background:{bg}; border:1px solid {border_color}; border-radius:10px; '
+            f'padding:1rem 1.25rem; margin-bottom:1.25rem; display:flex; align-items:flex-start; gap:0.85rem;">'
+            f'<span style="font-size:1.5rem; line-height:1;">{icon}</span>'
+            f'<div><div style="font-size:1rem; font-weight:700; color:{txt_color}; margin-bottom:0.25rem;">Program Status Update</div>'
+            f'<div style="font-size:0.92rem; color:{txt_color}; line-height:1.6;">{msg}</div></div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
     # ── Route to view ──
     if view == "Your Profile":
         show_student_profile_summary(student)
@@ -1114,25 +1135,6 @@ def show_student_profile_summary(student):
         roadblocks in your program.
     </div>
     """, unsafe_allow_html=True)
-
-    STATUS_BANNERS = [
-        ("program paused", "#92400E", "#FFF7ED", "#FED7AA", "⏸️", "Your program is currently paused. If you have any questions or would like to resume, please reach out to your Program Manager."),
-        ("completed", "#166534", "#F0FDF4", "#86EFAC", "🎉", "Woohoo! Congratulations on completing your program! We hope you had a fantastic experience with us."),
-        ("withdrawn", "#64748B", "#F8FAFC", "#E2E8F0", "📋", "You have withdrawn from the program. If you'd like to discuss re-enrolling or have any questions, please reach out to your Program Manager."),
-        ("suspended", "#DC2626", "#FEF2F2", "#FECACA", "⚠️", "Your program has been suspended. Please reach out to your Program Manager to discuss next steps."),
-    ]
-    program_status = (student.get("program_status") or "").strip().lower()
-    matched_banner = next(((txt_color, bg, border_color, icon, msg) for key, txt_color, bg, border_color, icon, msg in STATUS_BANNERS if key in program_status), None)
-    if matched_banner:
-        txt_color, bg, border_color, icon, msg = matched_banner
-        st.markdown(
-            f'<div style="background:{bg}; border:1px solid {border_color}; border-radius:8px; '
-            f'padding:0.75rem 1rem; margin-bottom:1rem; display:flex; align-items:flex-start; gap:0.65rem;">'
-            f'<span style="font-size:1.1rem;">{icon}</span>'
-            f'<div style="font-size:0.88rem; color:{txt_color}; line-height:1.55;">{msg}</div>'
-            f'</div>',
-            unsafe_allow_html=True
-        )
 
     mentor_name = student.get("mentor") or "Not yet assigned"
     mentor_email = student.get("mentor_email") or ""
