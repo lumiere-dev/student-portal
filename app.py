@@ -1116,7 +1116,7 @@ def show_student_profile_summary(student):
     """, unsafe_allow_html=True)
 
     STATUS_BANNERS = [
-        ("program pause", "#92400E", "#FFF7ED", "#FED7AA", "⏸️", "Your program is currently paused. If you have any questions or would like to resume, please reach out to your Program Manager."),
+        ("program paused", "#92400E", "#FFF7ED", "#FED7AA", "⏸️", "Your program is currently paused. If you have any questions or would like to resume, please reach out to your Program Manager."),
         ("completed", "#166534", "#F0FDF4", "#86EFAC", "🎉", "Woohoo! Congratulations on completing your program! We hope you had a fantastic experience with us."),
         ("withdrawn", "#64748B", "#F8FAFC", "#E2E8F0", "📋", "You have withdrawn from the program. If you'd like to discuss re-enrolling or have any questions, please reach out to your Program Manager."),
         ("suspended", "#DC2626", "#FEF2F2", "#FECACA", "⚠️", "Your program has been suspended. Please reach out to your Program Manager to discuss next steps."),
