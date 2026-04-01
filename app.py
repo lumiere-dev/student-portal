@@ -165,7 +165,8 @@ STUDENT_FIELDS = {
     "submission_portal": "Student Submission Portal Lookup",
     "publication_marker": "Publication Marker",
     "white_label_or_partner": "White Label or Partner Payment Program",
-    "program_status": "PM: Student Status in Program"
+    "program_status": "PM: Student Status in Program",
+    "program_pause_end_date": "Program Pause End Date"
 }
 
 DEADLINE_FIELDS = {
@@ -623,6 +624,7 @@ def _build_student_dict(record, email):
         "publication_marker": fields.get(STUDENT_FIELDS["publication_marker"], []),
         "white_label_or_partner": fields.get(STUDENT_FIELDS["white_label_or_partner"], ""),
         "program_status": unwrap(fields.get(STUDENT_FIELDS["program_status"], "")),
+        "program_pause_end_date": fields.get(STUDENT_FIELDS["program_pause_end_date"], ""),
     }
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -700,7 +702,8 @@ def check_session_cookie():
     if token:
         email = verify_session_token(token)
         if email:
-            students = filter_accessible_records(get_all_student_records_by_email(email))
+            with st.spinner("Loading your portal..."):
+                students = filter_accessible_records(get_all_student_records_by_email(email))
             if students:
                 st.session_state.authenticated = True
                 st.session_state.student_email = email
@@ -722,7 +725,8 @@ def check_magic_link_token():
         token = query_params["token"]
         email = verify_magic_token(token)
         if email:
-            students = filter_accessible_records(get_all_student_records_by_email(email))
+            with st.spinner("Loading your portal..."):
+                students = filter_accessible_records(get_all_student_records_by_email(email))
             if students:
                 st.session_state.authenticated = True
                 st.session_state.student_email = email
@@ -1096,6 +1100,18 @@ def show_dashboard():
     matched_banner = next(((txt_color, bg, border_color, icon, msg) for key, txt_color, bg, border_color, icon, msg in STATUS_BANNERS if key in program_status), None)
     if matched_banner:
         txt_color, bg, border_color, icon, msg = matched_banner
+        if "program paused" in program_status:
+            raw_pause_end = student.get("program_pause_end_date") or ""
+            pause_end_dates = raw_pause_end if isinstance(raw_pause_end, list) else [raw_pause_end]
+            pause_end_dates = [d.strip() for d in pause_end_dates if d and str(d).strip()]
+            if pause_end_dates:
+                try:
+                    from datetime import datetime
+                    latest = max(pause_end_dates, key=lambda d: datetime.strptime(d, "%Y-%m-%d"))
+                    pause_end_fmt = datetime.strptime(latest, "%Y-%m-%d").strftime("%B %-d, %Y")
+                    msg += f" Your program is expected to resume on {pause_end_fmt}."
+                except Exception:
+                    pass
         st.markdown(
             f'<div style="background:{bg}; border:1px solid {border_color}; border-radius:10px; '
             f'padding:1rem 1.25rem; margin-bottom:1.25rem; display:flex; align-items:flex-start; gap:0.85rem;">'
@@ -1800,7 +1816,8 @@ def show_writing_center(student):
             unsafe_allow_html=True
         )
 
-    st.markdown('<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin:1.25rem 0 0.75rem;">Writing Center Workshops</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin:1.25rem 0 0.3rem;">Writing Center Workshops</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:0.88rem; color:#475569; margin-bottom:0.75rem;">These workshops are sent to students throughout the program so that you can learn more about academic research writing.</div>', unsafe_allow_html=True)
     workshops = [
         (
             "WC_WORKSHOP1",
