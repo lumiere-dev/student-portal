@@ -1878,38 +1878,41 @@ def show_writing_center(student):
 
                 is_responded = str(responded).strip() == "Responded"
                 if is_responded:
-                    status_html = (
-                        '<span style="color:#16A34A; font-weight:600;">Responded</span>'
-                        '<div style="font-size:0.78rem; color:#475569; margin-top:0.2rem; line-height:1.4;">'
-                        'Your writing coach has responded to this request, please check your email.'
-                        '</div>'
-                    )
+                    border_color = "#16A34A"
+                    badge_html = '<span style="display:inline-block; background:#DCFCE7; color:#15803D; font-size:0.72rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:999px; letter-spacing:0.03em;">✓ Responded</span>'
+                    response_note = '<div style="font-size:0.78rem; color:#475569; margin-top:0.35rem; line-height:1.5;">Your writing coach has responded to this request — please check your email.</div>'
                 else:
-                    status_html = '<span style="color:#D97706; font-weight:600;">Pending</span>'
+                    border_color = "#F59E0B"
+                    badge_html = '<span style="display:inline-block; background:#FEF9C3; color:#B45309; font-size:0.72rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:999px; letter-spacing:0.03em;">⏳ Pending</span>'
+                    response_note = ""
                     response_date_str = "—"
 
+                responded_row = ""
+                if is_responded:
+                    responded_row = (
+                        f'<div style="display:flex; gap:1.5rem; margin-top:0.5rem; flex-wrap:wrap;">'
+                        f'<div><div style="font-size:0.68rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.15rem;">Date of Response</div>'
+                        f'<div style="font-size:0.85rem; color:#475569;">{response_date_str}</div></div>'
+                        f'</div>'
+                        f'{response_note}'
+                    )
+
                 rows_html += (
-                    f'<tr style="border-bottom:1px solid #F1F5F9;">'
-                    f'<td style="padding:0.6rem 0.75rem; font-size:0.85rem; color:#1E293B; white-space:nowrap;">{created_str}</td>'
-                    f'<td style="padding:0.6rem 0.75rem; font-size:0.85rem; color:#475569;">{req_type}</td>'
-                    f'<td style="padding:0.6rem 0.75rem; font-size:0.85rem;">{status_html}</td>'
-                    f'<td style="padding:0.6rem 0.75rem; font-size:0.85rem; color:#475569; white-space:nowrap;">{response_date_str}</td>'
-                    f'</tr>'
+                    f'<div style="border-left:4px solid {border_color}; background:white; border-radius:10px; '
+                    f'padding:0.9rem 1rem; margin-bottom:0.6rem; box-shadow:0 1px 4px rgba(0,0,0,0.06);">'
+                    f'<div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">'
+                    f'<div style="font-size:0.95rem; font-weight:700; color:#1E293B;">{req_type}</div>'
+                    f'{badge_html}'
+                    f'</div>'
+                    f'<div style="display:flex; gap:1.5rem; margin-top:0.45rem; flex-wrap:wrap;">'
+                    f'<div><div style="font-size:0.68rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.15rem;">Date Submitted</div>'
+                    f'<div style="font-size:0.85rem; color:#475569;">{created_str}</div></div>'
+                    f'</div>'
+                    f'{responded_row}'
+                    f'</div>'
                 )
 
-            table_html = (
-                '<div class="info-card" style="margin-bottom:1.25rem; padding:0; overflow:hidden;">'
-                '<table style="width:100%; border-collapse:collapse;">'
-                '<thead><tr style="background:#F8F9FA; border-bottom:2px solid #E2E8F0;">'
-                '<th style="padding:0.6rem 0.75rem; font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; text-align:left;">Date Submitted</th>'
-                '<th style="padding:0.6rem 0.75rem; font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; text-align:left;">Request Type</th>'
-                '<th style="padding:0.6rem 0.75rem; font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; text-align:left;">Status</th>'
-                '<th style="padding:0.6rem 0.75rem; font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; text-align:left;">Date of Response</th>'
-                '</tr></thead>'
-                f'<tbody>{rows_html}</tbody>'
-                '</table></div>'
-            )
-            st.markdown(table_html, unsafe_allow_html=True)
+            st.markdown(rows_html, unsafe_allow_html=True)
     else:
         st.markdown('<div style="font-size:0.88rem; color:#94A3B8; margin-bottom:1rem;">No requests to display.</div>', unsafe_allow_html=True)
 
