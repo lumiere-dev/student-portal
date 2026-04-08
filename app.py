@@ -78,9 +78,9 @@ def fetch_wc_requests(email):
             fields=fields,
             sort=[{"field": "Created Time", "direction": "desc"}],
         )
-        return records
-    except Exception:
-        return []
+        return {"records": records, "formula": formula, "error": None}
+    except Exception as e:
+        return {"records": [], "formula": None, "error": str(e)}
 
 # ──────────────────────────────────────────────
 # Magic Link Authentication
@@ -1847,7 +1847,9 @@ def show_writing_center(student):
     student_email = student.get("email", "")
     st.markdown('<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin:1.25rem 0 0.5rem;">Your Writing Center Requests</div>', unsafe_allow_html=True)
     if student_email:
-        wc_requests = fetch_wc_requests(student_email)
+        _wc_result = fetch_wc_requests(student_email)
+        wc_requests = _wc_result["records"]
+        st.info(f"DEBUG — email: `{student_email}` | formula: `{_wc_result['formula']}` | records found: {len(wc_requests)} | error: {_wc_result['error']}")
         if not wc_requests:
             st.markdown('<div style="font-size:0.88rem; color:#94A3B8; margin-bottom:1rem;">No writing center requests found for your account.</div>', unsafe_allow_html=True)
         else:
