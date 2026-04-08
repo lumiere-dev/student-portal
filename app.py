@@ -72,7 +72,7 @@ def fetch_wc_requests(email):
             "Responded by Writing Coach",
             "Writing Center Request Type",
             "Response Recorded [Created Time] (from Writing Centre Responses & Recording)",
-            "Written Upload",
+            "Written Feedback Upload (from Writing Centre Responses & Recording)",
         ]
         records = table.all(formula=formula, fields=fields)
         records.sort(key=lambda r: r["fields"].get("Created Time", ""), reverse=True)
@@ -1856,7 +1856,14 @@ def show_writing_center(student):
                 created_raw = f.get("Created Time", "")
                 responded = f.get("Responded by Writing Coach", "")
                 response_dates = f.get("Response Recorded [Created Time] (from Writing Centre Responses & Recording)")
-                attachments = f.get("Written Upload") or []
+                # Lookup field returns array-of-arrays — flatten to get attachment objects
+                raw_attachments = f.get("Written Feedback Upload (from Writing Centre Responses & Recording)") or []
+                attachments = []
+                for item in raw_attachments:
+                    if isinstance(item, list):
+                        attachments.extend(item)
+                    elif isinstance(item, dict):
+                        attachments.append(item)
 
                 # Format request date
                 try:
@@ -1888,31 +1895,45 @@ def show_writing_center(student):
                     note = ""
                     resp_date_html = '<span style="font-size:0.8rem;color:#CBD5E1;">—</span>'
 
-                attachment_html = ""
-                if attachments:
-                    links = " ".join(
-                        f'<a href="{a["url"]}" target="_blank" style="display:inline-flex;align-items:center;gap:0.3rem;'
-                        f'font-size:0.75rem;color:#BE1E2D;font-weight:600;text-decoration:none;'
-                        f'background:#FFF5F5;border:1px solid #FECACA;border-radius:5px;padding:0.15rem 0.5rem;margin-top:0.35rem;margin-right:0.3rem;">'
-                        f'📎 {a.get("filename", "Attachment")}</a>'
-                        for a in attachments
-                    )
-                    attachment_html = f'<div>{links}</div>'
+                # Build inline viewer — only for Written Feedback requests with attachments
+                viewer_html = ""
+                is_written_feedback = "written feedback" in req_type.lower()
+                if is_written_feedback and attachments and is_responded:
+                    for a in attachments:
+                        url = a.get("url", "")
+                        filename = a.get("filename", "Attachment")
+                        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+                        if ext == "pdf":
+                            viewer_html += (
+                                f'<div style="margin-top:0.75rem;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">'
+                                f'<div style="background:#F8FAFC;padding:0.4rem 0.75rem;border-bottom:1px solid #E2E8F0;'
+                                f'font-size:0.72rem;font-weight:600;color:#64748B;">📄 {filename}</div>'
+                                f'<iframe src="{url}" width="100%" height="620" style="border:none;display:block;"></iframe>'
+                                f'</div>'
+                            )
+                        else:
+                            viewer_html += (
+                                f'<a href="{url}" target="_blank" style="display:inline-flex;align-items:center;gap:0.3rem;'
+                                f'font-size:0.75rem;color:#BE1E2D;font-weight:600;text-decoration:none;'
+                                f'background:#FFF5F5;border:1px solid #FECACA;border-radius:5px;'
+                                f'padding:0.2rem 0.55rem;margin-top:0.4rem;">📎 {filename}</a>'
+                            )
 
                 rows_html += (
-                    f'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;'
-                    f'padding:0.75rem 1rem;border-bottom:1px solid #F1F5F9;">'
+                    f'<div style="padding:0.75rem 1rem;border-bottom:1px solid #F1F5F9;">'
+                    f'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">'
                     f'<div style="flex:1;min-width:0;">'
                     f'<div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">'
                     f'<span style="font-size:0.88rem;font-weight:600;color:#1E293B;">{req_type}</span>'
                     f'{badge}</div>'
                     f'{note}'
-                    f'{attachment_html}'
                     f'</div>'
                     f'<div style="text-align:right;flex-shrink:0;">'
                     f'<div style="font-size:0.78rem;color:#1E293B;font-weight:500;white-space:nowrap;">{created_str}</div>'
                     f'<div style="font-size:0.72rem;color:#94A3B8;margin-top:0.1rem;white-space:nowrap;">Response: {resp_date_html}</div>'
                     f'</div>'
+                    f'</div>'
+                    f'{viewer_html}'
                     f'</div>'
                 )
 
