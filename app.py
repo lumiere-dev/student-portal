@@ -55,6 +55,33 @@ def get_application_table():
     base = api.base(get_secret("PUBLICATION_BASE_ID"))
     return base.table(get_secret("PUBLICATION_TABLE"))
 
+@st.cache_resource(show_spinner=False)
+def get_wc_requests_table():
+    api = get_airtable_api()
+    base = api.base(get_secret("PUBLICATION_BASE_ID"))
+    return base.table(get_secret("WC_REQUESTS_TABLE"))
+
+@st.cache_data(ttl=300, show_spinner=False)
+def fetch_wc_requests(email):
+    try:
+        table = get_wc_requests_table()
+        safe_email = email.replace("'", "\\'")
+        formula = f"{{Student Email Final}} = '{safe_email}'"
+        fields = [
+            "Created Time",
+            "Responded by Writing Coach",
+            "Writing Center Request Type",
+            "Response Recorded [Created Time] (from Writing Centre Responses & Recording)",
+        ]
+        records = table.all(
+            formula=formula,
+            fields=fields,
+            sort=[{"field": "Created Time", "direction": "desc"}],
+        )
+        return records
+    except Exception:
+        return []
+
 # ──────────────────────────────────────────────
 # Magic Link Authentication
 # ──────────────────────────────────────────────
@@ -1815,6 +1842,79 @@ def show_writing_center(student):
             f'</div>',
             unsafe_allow_html=True
         )
+
+    # ── Writing Center Requests history ──
+    student_email = student.get("email", "")
+    st.markdown('<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin:1.25rem 0 0.5rem;">Your Writing Center Requests</div>', unsafe_allow_html=True)
+    if student_email:
+        wc_requests = fetch_wc_requests(student_email)
+        if not wc_requests:
+            st.markdown('<div style="font-size:0.88rem; color:#94A3B8; margin-bottom:1rem;">No writing center requests found for your account.</div>', unsafe_allow_html=True)
+        else:
+            rows_html = ""
+            for rec in wc_requests:
+                f = rec.get("fields", {})
+                req_type = f.get("Writing Center Request Type") or "—"
+                created_raw = f.get("Created Time", "")
+                responded = f.get("Responded by Writing Coach", "")
+                response_dates = f.get("Response Recorded [Created Time] (from Writing Centre Responses & Recording)")
+
+                # Format request date
+                try:
+                    dt = datetime.fromisoformat(created_raw.replace("Z", "+00:00"))
+                    day = dt.day
+                    suffix = "th" if 11 <= day <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+                    created_str = f"{dt.strftime('%B')} {day}{suffix}, {dt.year}"
+                except Exception:
+                    created_str = created_raw or "—"
+
+                # Format response date
+                response_date_str = "—"
+                if isinstance(response_dates, list) and response_dates:
+                    try:
+                        rd = datetime.fromisoformat(str(response_dates[0]).replace("Z", "+00:00"))
+                        day = rd.day
+                        suffix = "th" if 11 <= day <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+                        response_date_str = f"{rd.strftime('%B')} {day}{suffix}, {rd.year}"
+                    except Exception:
+                        response_date_str = str(response_dates[0])
+
+                is_responded = "Responded" in str(responded)
+                if is_responded:
+                    status_html = (
+                        '<span style="color:#16A34A; font-weight:600;">Responded</span>'
+                        '<div style="font-size:0.78rem; color:#475569; margin-top:0.2rem; line-height:1.4;">'
+                        'Your writing coach has responded to this request, please check your email.'
+                        '</div>'
+                    )
+                else:
+                    status_html = '<span style="color:#D97706; font-weight:600;">Pending</span>'
+                    response_date_str = "—"
+
+                rows_html += (
+                    f'<tr style="border-bottom:1px solid #F1F5F9;">'
+                    f'<td style="padding:0.6rem 0.75rem; font-size:0.85rem; color:#1E293B; white-space:nowrap;">{created_str}</td>'
+                    f'<td style="padding:0.6rem 0.75rem; font-size:0.85rem; color:#475569;">{req_type}</td>'
+                    f'<td style="padding:0.6rem 0.75rem; font-size:0.85rem;">{status_html}</td>'
+                    f'<td style="padding:0.6rem 0.75rem; font-size:0.85rem; color:#475569; white-space:nowrap;">{response_date_str}</td>'
+                    f'</tr>'
+                )
+
+            table_html = (
+                '<div class="info-card" style="margin-bottom:1.25rem; padding:0; overflow:hidden;">'
+                '<table style="width:100%; border-collapse:collapse;">'
+                '<thead><tr style="background:#F8F9FA; border-bottom:2px solid #E2E8F0;">'
+                '<th style="padding:0.6rem 0.75rem; font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; text-align:left;">Date Submitted</th>'
+                '<th style="padding:0.6rem 0.75rem; font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; text-align:left;">Request Type</th>'
+                '<th style="padding:0.6rem 0.75rem; font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; text-align:left;">Status</th>'
+                '<th style="padding:0.6rem 0.75rem; font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; text-align:left;">Date of Response</th>'
+                '</tr></thead>'
+                f'<tbody>{rows_html}</tbody>'
+                '</table></div>'
+            )
+            st.markdown(table_html, unsafe_allow_html=True)
+    else:
+        st.markdown('<div style="font-size:0.88rem; color:#94A3B8; margin-bottom:1rem;">No requests to display.</div>', unsafe_allow_html=True)
 
     st.markdown('<div style="font-size:0.72rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em; margin:1.25rem 0 0.3rem;">Writing Center Workshops</div>', unsafe_allow_html=True)
     st.markdown('<div style="font-size:0.88rem; color:#475569; margin-bottom:0.75rem;">These workshops are sent to students throughout the program so that you can learn more about academic research writing.</div>', unsafe_allow_html=True)
