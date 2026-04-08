@@ -59,14 +59,14 @@ def get_application_table():
 def get_wc_requests_table():
     api = get_airtable_api()
     base = api.base(get_secret("PUBLICATION_BASE_ID"))
-    return base.table(get_secret("WC_Requests"))
+    return base.table(get_secret("WC_REQUESTS"))
 
 @st.cache_data(ttl=300, show_spinner=False)
 def fetch_wc_requests(email):
     try:
         table = get_wc_requests_table()
-        safe_email = email.replace("'", "\\'")
-        formula = f"{{Student Email Final}} = '{safe_email}'"
+        safe_email = email.lower().replace("'", "\\'")
+        formula = f"LOWER({{Student Email Final}}) = '{safe_email}'"
         fields = [
             "Created Time",
             "Responded by Writing Coach",
