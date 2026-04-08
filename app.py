@@ -72,6 +72,7 @@ def fetch_wc_requests(email):
             "Responded by Writing Coach",
             "Writing Center Request Type",
             "Response Recorded [Created Time] (from Writing Centre Responses & Recording)",
+            "Written Upload",
         ]
         records = table.all(formula=formula, fields=fields)
         records.sort(key=lambda r: r["fields"].get("Created Time", ""), reverse=True)
@@ -1855,6 +1856,7 @@ def show_writing_center(student):
                 created_raw = f.get("Created Time", "")
                 responded = f.get("Responded by Writing Coach", "")
                 response_dates = f.get("Response Recorded [Created Time] (from Writing Centre Responses & Recording)")
+                attachments = f.get("Written Upload") or []
 
                 # Format request date
                 try:
@@ -1886,6 +1888,17 @@ def show_writing_center(student):
                     note = ""
                     resp_date_html = '<span style="font-size:0.8rem;color:#CBD5E1;">—</span>'
 
+                attachment_html = ""
+                if attachments:
+                    links = " ".join(
+                        f'<a href="{a["url"]}" target="_blank" style="display:inline-flex;align-items:center;gap:0.3rem;'
+                        f'font-size:0.75rem;color:#BE1E2D;font-weight:600;text-decoration:none;'
+                        f'background:#FFF5F5;border:1px solid #FECACA;border-radius:5px;padding:0.15rem 0.5rem;margin-top:0.35rem;margin-right:0.3rem;">'
+                        f'📎 {a.get("filename", "Attachment")}</a>'
+                        for a in attachments
+                    )
+                    attachment_html = f'<div>{links}</div>'
+
                 rows_html += (
                     f'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;'
                     f'padding:0.75rem 1rem;border-bottom:1px solid #F1F5F9;">'
@@ -1894,6 +1907,7 @@ def show_writing_center(student):
                     f'<span style="font-size:0.88rem;font-weight:600;color:#1E293B;">{req_type}</span>'
                     f'{badge}</div>'
                     f'{note}'
+                    f'{attachment_html}'
                     f'</div>'
                     f'<div style="text-align:right;flex-shrink:0;">'
                     f'<div style="font-size:0.78rem;color:#1E293B;font-weight:500;white-space:nowrap;">{created_str}</div>'
