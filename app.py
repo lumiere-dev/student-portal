@@ -73,11 +73,8 @@ def fetch_wc_requests(email):
             "Writing Center Request Type",
             "Response Recorded [Created Time] (from Writing Centre Responses & Recording)",
         ]
-        records = table.all(
-            formula=formula,
-            fields=fields,
-            sort=[{"field": "Created Time", "direction": "desc"}],
-        )
+        records = table.all(formula=formula, fields=fields)
+        records.sort(key=lambda r: r["fields"].get("Created Time", ""), reverse=True)
         return {"records": records, "formula": formula, "error": None}
     except Exception as e:
         return {"records": [], "formula": None, "error": str(e)}
