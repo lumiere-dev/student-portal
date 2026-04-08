@@ -1905,11 +1905,14 @@ def show_writing_center(student):
                         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
                         if ext == "pdf":
                             viewer_html += (
-                                f'<div style="margin-top:0.75rem;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">'
-                                f'<div style="background:#F8FAFC;padding:0.4rem 0.75rem;border-bottom:1px solid #E2E8F0;'
-                                f'font-size:0.72rem;font-weight:600;color:#64748B;">📄 {filename}</div>'
+                                f'<details style="margin-top:0.65rem;">'
+                                f'<summary style="cursor:pointer;display:inline-flex;align-items:center;gap:0.35rem;'
+                                f'font-size:0.75rem;font-weight:600;color:#BE1E2D;background:#FFF5F5;'
+                                f'border:1px solid #FECACA;border-radius:5px;padding:0.2rem 0.6rem;list-style:none;">📄 View Feedback</summary>'
+                                f'<div style="margin-top:0.5rem;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">'
                                 f'<iframe src="{url}" width="100%" height="620" style="border:none;display:block;"></iframe>'
                                 f'</div>'
+                                f'</details>'
                             )
                         else:
                             viewer_html += (
