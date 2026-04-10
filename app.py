@@ -631,7 +631,7 @@ def _build_student_dict(record, email):
         "program_manager_email": unwrap(fields.get(STUDENT_FIELDS["program_manager_email"], "")),
         "pm_facts": fields.get(STUDENT_FIELDS["pm_facts"], ""),
         "writing_coach_name": fields.get(STUDENT_FIELDS["writing_coach_name"], ""),
-        "writing_coach_email": unwrap(fields.get(STUDENT_FIELDS["writing_coach_email"], "")),
+        "writing_coach_email": [e.strip() for v in (fields.get(STUDENT_FIELDS["writing_coach_email"]) or []) for e in str(v).split(",") if e.strip()],
         "revised_final_paper_due": unwrap(fields.get(STUDENT_FIELDS["revised_final_paper_due"], "")),
         "student_no_shows": unwrap(fields.get(STUDENT_FIELDS["student_no_shows"], 0), default=0),
         "reason_for_interest": unwrap(fields.get(STUDENT_FIELDS["reason_for_interest"], "")),
@@ -1816,8 +1816,11 @@ def show_writing_center(student):
 
     # Writing Coach card
     wc_name = student.get("writing_coach_name") or "Not assigned"
-    wc_email = student.get("writing_coach_email") or ""
-    wc_email_html = f'<a href="mailto:{wc_email}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{wc_email}</a>' if wc_email else ""
+    wc_emails = student.get("writing_coach_email") or []
+    wc_email_html = " &nbsp;·&nbsp; ".join(
+        f'<a href="mailto:{e}" style="font-size:0.88rem; color:#BE1E2D; text-decoration:none;">{e}</a>'
+        for e in wc_emails
+    ) if wc_emails else ""
     st.markdown(
         f'<div class="info-card" style="margin-bottom:1rem; display:flex; align-items:center; gap:1rem;">'
         f'<div style="background:#F1F5F9; border-radius:50%; width:44px; height:44px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#64748B;">✍️</div>'
