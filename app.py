@@ -725,7 +725,10 @@ def get_deadlines_for_student(student_name):
 def check_session_cookie():
     if st.session_state.authenticated:
         return
-    token = cookies.get("student_session")
+    try:
+        token = cookies.get("student_session")
+    except TypeError:
+        return
     if token:
         email = verify_session_token(token)
         if email:
