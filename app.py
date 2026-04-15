@@ -174,6 +174,7 @@ STUDENT_FIELDS = {
     "notes_summary": "Mentor-Student Notes Summary",
     "hours_recorded": "[Current + Archived] No. of Hours Recorded",
     "foundation_student": "Foundation Student",
+    "pub_foundation_student": "Publication Foundation Student Y/N",
     "tuition_paid": "OB: Full Tuition Paid",
     "program_manager_name": "Program Manager (Text)",
     "program_manager_email": "Program Manager Email",
@@ -554,7 +555,7 @@ def format_notes_summary(text):
 
 def is_overdue(due_date_str, status):
     """Check if deadline is overdue"""
-    if status == "Submitted":
+    if status in ("Submitted", "Deadline Waived"):
         return False
     if not due_date_str:
         return False
@@ -626,6 +627,7 @@ def _build_student_dict(record, email):
         "notes_summary": fields.get(STUDENT_FIELDS["notes_summary"], ""),
         "hours_recorded": fields.get(STUDENT_FIELDS["hours_recorded"], ""),
         "foundation_student": fields.get(STUDENT_FIELDS["foundation_student"], ""),
+        "pub_foundation_student": fields.get(STUDENT_FIELDS["pub_foundation_student"], ""),
         "tuition_paid": fields.get(STUDENT_FIELDS["tuition_paid"], ""),
         "program_manager_name": unwrap(fields.get(STUDENT_FIELDS["program_manager_name"], "")),
         "program_manager_email": unwrap(fields.get(STUDENT_FIELDS["program_manager_email"], "")),
@@ -1067,7 +1069,11 @@ def show_dashboard():
             "Deadlines & Submissions",
         ]
         _pub_marker = student.get("publication_marker", [])
-        if "Yes" in ((_pub_marker if isinstance(_pub_marker, list) else [_pub_marker])):
+        _pub_foundation = student.get("pub_foundation_student", "")
+        _pub_foundation_vals = _pub_foundation if isinstance(_pub_foundation, list) else [_pub_foundation]
+        _has_pub_marker = "Yes" in ((_pub_marker if isinstance(_pub_marker, list) else [_pub_marker]))
+        _has_pub_foundation = any(str(v).strip().startswith("Yes") for v in _pub_foundation_vals if v)
+        if _has_pub_marker or _has_pub_foundation:
             nav_options.append("Publication Program")
         nav_options += ["Writing Center", "Resources"]
 
@@ -1374,10 +1380,10 @@ def show_deadlines_and_submissions(student):
     if not st.session_state.get(popup_key):
         st.session_state[popup_key] = True
         now = datetime.now()
-        pending = [d for d in deadlines if d["status"] != "Submitted" and d["due_date"]]
-        overdue_items = [d for d in pending if datetime.strptime(d["due_date"], "%Y-%m-%d") < now]
+        actionable = [d for d in deadlines if d["status"] not in ("Submitted", "Deadline Waived") and d["due_date"]]
+        overdue_items = [d for d in actionable if datetime.strptime(d["due_date"], "%Y-%m-%d") < now]
         upcoming_items = sorted(
-            [d for d in pending if datetime.strptime(d["due_date"], "%Y-%m-%d") >= now],
+            [d for d in actionable if datetime.strptime(d["due_date"], "%Y-%m-%d") >= now],
             key=lambda x: x["due_date"]
         )
         if overdue_items or upcoming_items:
@@ -1385,33 +1391,36 @@ def show_deadlines_and_submissions(student):
 
     # ── Summary bar ──
     total = len(deadlines)
-    submitted = sum(1 for d in deadlines if d["status"] == "Submitted")
+    submitted_count = sum(1 for d in deadlines if d["status"] == "Submitted")
+    waived_count = sum(1 for d in deadlines if d["status"] == "Deadline Waived")
     overdue_count = sum(1 for d in deadlines if is_overdue(d["due_date"], d["status"]))
-    pending = total - submitted - overdue_count
+    pending_count = total - submitted_count - waived_count - overdue_count
 
-    st.markdown(f"""
-    <div style="display:flex; gap:1.5rem; margin-bottom:1.25rem; flex-wrap:wrap;">
-        <div style="display:flex; align-items:center; gap:0.4rem;">
-            <span style="width:10px; height:10px; border-radius:50%; background:#16A34A; display:inline-block;"></span>
-            <span style="font-size:0.9rem; color:#475569;">{submitted} Submitted</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.4rem;">
-            <span style="width:10px; height:10px; border-radius:50%; background:#F59E0B; display:inline-block;"></span>
-            <span style="font-size:0.9rem; color:#475569;">{pending} Pending</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.4rem;">
-            <span style="width:10px; height:10px; border-radius:50%; background:#EF4444; display:inline-block;"></span>
-            <span style="font-size:0.9rem; color:#475569;">{overdue_count} Overdue</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    summary_dots = [
+        ("#16A34A", f"{submitted_count} Submitted"),
+        ("#F59E0B", f"{pending_count} Pending"),
+        ("#EF4444", f"{overdue_count} Overdue"),
+    ]
+    if waived_count:
+        summary_dots.append(("#6366F1", f"{waived_count} Waived"))
+    dots_html = "".join(
+        f'<div style="display:flex; align-items:center; gap:0.4rem;">'
+        f'<span style="width:10px; height:10px; border-radius:50%; background:{color}; display:inline-block;"></span>'
+        f'<span style="font-size:0.9rem; color:#475569;">{label}</span>'
+        f'</div>'
+        for color, label in summary_dots
+    )
+    st.markdown(
+        f'<div style="display:flex; gap:1.5rem; margin-bottom:1.25rem; flex-wrap:wrap;">{dots_html}</div>',
+        unsafe_allow_html=True,
+    )
 
-    # ── Overdue + Next Deadline banners ──
+    # ── Overdue + Next Deadline banners (exclude waived) ──
     try:
         now = datetime.now()
-        pending_dl = [d for d in deadlines if d["status"] != "Submitted" and d["due_date"]]
-        overdue_dl = [d for d in pending_dl if datetime.strptime(d["due_date"], "%Y-%m-%d") < now]
-        future_dl = [d for d in pending_dl if datetime.strptime(d["due_date"], "%Y-%m-%d") >= now]
+        actionable_dl = [d for d in deadlines if d["status"] not in ("Submitted", "Deadline Waived") and d["due_date"]]
+        overdue_dl = [d for d in actionable_dl if datetime.strptime(d["due_date"], "%Y-%m-%d") < now]
+        future_dl = [d for d in actionable_dl if datetime.strptime(d["due_date"], "%Y-%m-%d") >= now]
 
         if overdue_dl:
             overdue_list = ", ".join(
@@ -1439,21 +1448,28 @@ def show_deadlines_and_submissions(student):
     except Exception:
         pass
 
-    # ── Deadline rows ──
-    for dl in deadlines:
+    # ── Split into active (pending/overdue/waived) and submitted groups ──
+    active_deadlines = [d for d in deadlines if d["status"] not in ("Submitted", "Deadline Waived")]
+    waived_deadlines = [d for d in deadlines if d["status"] == "Deadline Waived"]
+    submitted_deadlines = [d for d in deadlines if d["status"] == "Submitted"]
+
+    def _render_deadline_row(dl):
         dtype = dl["type"] or "Deadline"
         status = dl["status"]
         overdue = is_overdue(dl["due_date"], status)
+        is_waived = status == "Deadline Waived"
 
         if status == "Submitted":
             icon = "✅"
+        elif is_waived:
+            icon = "〇"
         elif overdue:
             icon = "⚠️"
         else:
             icon = "📅"
 
         with st.container():
-            guidebook_links = get_guidebook_links(dtype)
+            guidebook_links = get_guidebook_links(dtype) if not is_waived else []
             col1, col2, col3 = st.columns([2, 1, 1])
 
             with col1:
@@ -1476,11 +1492,21 @@ def show_deadlines_and_submissions(student):
                     st.markdown(f"{icon} **{dtype}**")
 
             with col2:
-                st.markdown(f"**Due:** {format_date(dl['due_date'])}")
+                if is_waived:
+                    st.markdown("**Due:** —")
+                else:
+                    st.markdown(f"**Due:** {format_date(dl['due_date'])}")
 
             with col3:
                 if status == "Submitted":
                     st.success(f"Submitted {format_datetime_ist(dl['date_submitted'])}" if dl["date_submitted"] else "Submitted")
+                elif is_waived:
+                    st.markdown(
+                        '<span style="display:inline-block; background:#EEF2FF; color:#4F46E5; '
+                        'padding:0.25rem 0.75rem; border-radius:20px; font-size:0.85rem; font-weight:500;">'
+                        'Deadline Waived</span>',
+                        unsafe_allow_html=True,
+                    )
                 elif overdue:
                     st.error("Overdue")
                 else:
@@ -1490,7 +1516,22 @@ def show_deadlines_and_submissions(student):
                 for field_name, value in dl["submissions"].items():
                     _render_submission_value(value, label="Your submission")
 
+    # Render active (pending + overdue) deadlines
+    for dl in active_deadlines + waived_deadlines:
+        _render_deadline_row(dl)
         st.markdown("---")
+
+    # Render submitted deadlines in a clearly separated section
+    if submitted_deadlines:
+        st.markdown(
+            '<div style="margin-top:2.5rem; margin-bottom:1.25rem; padding-top:1.5rem; border-top:2px solid #E2E8F0;">'
+            '<span style="font-size:1rem; font-weight:600; color:#64748B;">Submitted Deliverables</span>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        for dl in submitted_deadlines:
+            _render_deadline_row(dl)
+            st.markdown("---")
 
 
 def _render_submission_value(value, label=None):
