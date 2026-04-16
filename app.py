@@ -193,6 +193,7 @@ STUDENT_FIELDS = {
     "white_label_or_partner": "White Label or Partner Payment Program",
     "program_status": "PM: Student Status in Program",
     "program_pause_end_date": "Program Pause End Date"
+    "student_confirmed_launched": "Student Confirmed & Launched"
 }
 
 DEADLINE_FIELDS = {
@@ -653,6 +654,7 @@ def _build_student_dict(record, email):
         "white_label_or_partner": fields.get(STUDENT_FIELDS["white_label_or_partner"], ""),
         "program_status": unwrap(fields.get(STUDENT_FIELDS["program_status"], "")),
         "program_pause_end_date": fields.get(STUDENT_FIELDS["program_pause_end_date"], ""),
+        "student_confirmed_launched": fields.get(STUDENT_FIELDS["student_confirmed_launched"], "")
     }
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -785,8 +787,17 @@ def check_magic_link_token():
 # ──────────────────────────────────────────────
 
 def filter_accessible_records(students):
-    """Remove records where White Label or Partner Payment Program is set."""
-    return [s for s in students if not s.get("white_label_or_partner")]
+    """Remove records where White Label or Partner Payment Program is set,
+    or where Student Confirmed & Launched does not contain Yes."""
+    def is_accessible(s):
+        if s.get("white_label_or_partner"):
+            return False
+        confirmed = s.get("student_confirmed_launched", "")
+        confirmed_vals = confirmed if isinstance(confirmed, list) else [confirmed]
+        if not any(str(v).strip().startswith("Yes") for v in confirmed_vals if v):
+            return False
+        return True
+    return [s for s in students if is_accessible(s)]
 
 def show_program_selector():
     import base64
