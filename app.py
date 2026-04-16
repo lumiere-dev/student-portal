@@ -605,12 +605,13 @@ def _build_student_dict(record, email):
     fields = record["fields"]
     tracker_value = fields.get(STUDENT_FIELDS["name"], "")
     raw_marker = fields.get(STUDENT_FIELDS["publication_marker"], [])
-    pub_marker = raw_marker[0] if isinstance(raw_marker, list) and raw_marker else raw_marker
-    if pub_marker == "Yes":
-        application = get_student_publication_record(tracker_value)
-        app_fields = application["fields"] if application else {}
-    else:
-        app_fields = {}
+pub_marker = raw_marker[0] if isinstance(raw_marker, list) and raw_marker else raw_marker
+pub_marker_vals = raw_marker if isinstance(raw_marker, list) else [raw_marker]
+if any(str(v).strip() == "Yes" for v in pub_marker_vals if v):
+    application = get_student_publication_record(tracker_value)
+    app_fields = application["fields"] if application else {}
+else:
+    app_fields = {}
     return {
         "id": record["id"],
         "name": tracker_value or "Unknown",
