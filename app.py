@@ -192,7 +192,7 @@ STUDENT_FIELDS = {
     "publication_marker": "Publication Marker",
     "white_label_or_partner": "White Label or Partner Payment Program",
     "program_status": "PM: Student Status in Program",
-    "program_pause_end_date": "Program Pause End Date"
+    "program_pause_end_date": "Program Pause End Date",
     "student_confirmed_launched": "Student Confirmed & Launched"
 }
 
