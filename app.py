@@ -1039,7 +1039,7 @@ def show_login_page():
                             st.session_state.program_selected = False
                         st.rerun()
                     elif all_records:
-                        st.error("Cannot preview: this student is only enrolled in White Label or Partner Payment Programs and does not have access to this portal.")
+                        st.error("Cannot preview: this student does not have access to the portal. They may not yet be confirmed and launched, or are enrolled in a White Label or Partner Payment Program.")
                     else:
                         st.error("Student email not found.")
 
