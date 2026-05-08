@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+import streamlit.components.v1 as components
 from pyairtable import Api
 import pandas as pd
 from datetime import datetime, timedelta, timezone
@@ -8,7 +9,6 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import re
 from streamlit_cookies_controller import CookieController
 
-import streamlit.components.v1 as components
 
 # This is the "silent" tracker
 posthog_snippet = """
