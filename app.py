@@ -8,31 +8,6 @@ import resend
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import re
 from streamlit_cookies_controller import CookieController
-import streamlit.components.v1 as components
-
-components.html(umami_snippet, height=0, width=0)
-
-umami_snippet = """
-<script defer src="https://cloud.umami.is/script.js" data-website-id="ee453438-393d-4965-a1f9-cd2a68e6b013"></script>
-"""
-
-
-# This is the "silent" tracker
-posthog_snippet = """
-<script>
-    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}var l=t;for(void 0!==a?l=t[a]=[]:a="posthog",l.people=l.people||[],l.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},l.people.toString=function(){return l.toString(1)+".people (stub)"},p="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures onSessionId getSurveys getActiveMatchingSurveys renderSurvey getNextSurveyStep identifyAndSetDistinctId".split(" "),r=0;r<p.length;r++)g(l,p[r]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-    posthog.init('phc_oVPvA5P5XDgN389qFX9pUrZykk7ykhRHLJUJ6PKHNMFF', {
-    api_host: 'https://webhook.site/57ed48c8-530e-4006-9d63-f999bb7d8057',
-    person_profiles: 'identified_only',
-    capture_pageview: true,
-    property_blacklist: ['$device_id'] 
-})
-</script>
-"""
-
-# Inject the snippet into the frontend
-components.html(posthog_snippet, height=0, width=0)
-
 
 
 def get_secret(key, default=None):
@@ -51,6 +26,27 @@ st.set_page_config(
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
+)
+
+# ── Umami analytics (injected into parent frame so it tracks the real URL) ──
+components.html(
+    """
+    <script>
+    (function() {
+        // window.parent === the actual Streamlit app frame, not this iframe
+        if (window.parent && !window.parent.__umami_loaded) {
+            window.parent.__umami_loaded = true;
+            const s = window.parent.document.createElement('script');
+            s.defer = true;
+            s.src = 'https://cloud.umami.is/script.js';
+            s.setAttribute('data-website-id', 'ee453438-393d-4965-a1f9-cd2a68e6b013');
+            window.parent.document.head.appendChild(s);
+        }
+    })();
+    </script>
+    """,
+    height=0,
+    width=0,
 )
 
 # ──────────────────────────────────────────────
@@ -579,6 +575,29 @@ def format_notes_summary(text):
             formatted_lines.append(line)
 
     return '\n\n'.join(formatted_lines)
+
+def track_umami_login(email):
+    """Identify the user in Umami and fire a 'login' event in the parent frame."""
+    safe_email = (email or "").replace("'", "\\'")
+    components.html(
+        f"""
+        <script>
+        (function() {{
+            const fire = () => {{
+                if (window.parent && window.parent.umami) {{
+                    window.parent.umami.identify({{ email: '{safe_email}' }});
+                    window.parent.umami.track('login', {{ email: '{safe_email}' }});
+                }} else {{
+                    setTimeout(fire, 200);   // wait for umami to finish loading
+                }}
+            }};
+            fire();
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
 
 def is_overdue(due_date_str, status):
     """Check if deadline is overdue"""
@@ -2257,13 +2276,12 @@ def show_resources(student):
 # ──────────────────────────────────────────────
 
 def main():
-    # Write deferred session cookie now that the JS component is ready
     if "pending_session_cookie" in st.session_state:
         try:
             cookies.set("student_session", generate_session_token(st.session_state.pending_session_cookie), max_age=30 * 24 * 3600)
             del st.session_state.pending_session_cookie
         except Exception:
-            pass  # Component not ready yet — retry on next run
+            pass
     check_session_cookie()
     check_magic_link_token()
 
@@ -2272,6 +2290,10 @@ def main():
     elif not st.session_state.program_selected:
         show_program_selector()
     else:
+        # ── Fire login event once per session ──
+        if not st.session_state.get("login_tracked"):
+            track_umami_login(st.session_state.student_email)
+            st.session_state.login_tracked = True
         show_dashboard()
 
 if __name__ == "__main__":
