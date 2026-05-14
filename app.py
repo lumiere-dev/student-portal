@@ -8,6 +8,13 @@ import resend
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import re
 from streamlit_cookies_controller import CookieController
+import streamlit.components.v1 as components
+
+
+
+umami_snippet = """
+<script defer src="https://cloud.umami.is/script.js" data-website-id="ee453438-393d-4965-a1f9-cd2a68e6b013"></script>
+"""
 
 
 # This is the "silent" tracker
@@ -25,6 +32,7 @@ posthog_snippet = """
 
 # Inject the snippet into the frontend
 components.html(posthog_snippet, height=0, width=0)
+
 
 
 def get_secret(key, default=None):
