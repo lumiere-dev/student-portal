@@ -10,7 +10,7 @@ import re
 from streamlit_cookies_controller import CookieController
 import streamlit.components.v1 as components
 
-
+components.html(umami_snippet, height=0, width=0)
 
 umami_snippet = """
 <script defer src="https://cloud.umami.is/script.js" data-website-id="ee453438-393d-4965-a1f9-cd2a68e6b013"></script>
