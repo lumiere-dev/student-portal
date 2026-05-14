@@ -33,13 +33,22 @@ components.html(
     """
     <script>
     (function() {
-        // window.parent === the actual Streamlit app frame, not this iframe
         if (window.parent && !window.parent.__umami_loaded) {
             window.parent.__umami_loaded = true;
+
             const s = window.parent.document.createElement('script');
             s.defer = true;
             s.src = 'https://cloud.umami.is/script.js';
             s.setAttribute('data-website-id', 'ee453438-393d-4965-a1f9-cd2a68e6b013');
+            s.setAttribute('data-auto-track', 'false');   // ← stop auto-pageviews
+
+            // Fire exactly ONE pageview once the script finishes loading
+            s.onload = function() {
+                if (window.parent.umami) {
+                    window.parent.umami.track();
+                }
+            };
+
             window.parent.document.head.appendChild(s);
         }
     })();
