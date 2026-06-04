@@ -8,6 +8,7 @@ import resend
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import re
 from streamlit_cookies_controller import CookieController
+from posthog import Posthog
 
 
 def get_secret(key, default=None):
@@ -19,6 +20,14 @@ def get_secret(key, default=None):
         return st.secrets[key]
     except (KeyError, FileNotFoundError):
         return default
+
+
+@st.cache_resource(show_spinner=False)
+def get_posthog():
+    return Posthog(
+        project_api_key=get_secret("POSTHOG_API_KEY"),
+        host=get_secret("POSTHOG_HOST", "https://eu.i.posthog.com"),
+    )
 
 # Page config
 st.set_page_config(
@@ -745,7 +754,8 @@ def get_deadlines_for_student(student_name):
     """Get all deadlines for a specific student"""
     tables = get_tables()
     try:
-        formula = f"FIND('{student_name.split('|')[0].strip()}', {{Deadline Name}})"
+        escaped = student_name.replace("'", "\\'")
+        formula = f"{{{DEADLINE_FIELDS['student_link']}}} = '{escaped}'"
         records = tables["deadlines"].all(formula=formula)
 
         deadlines = []
@@ -827,6 +837,11 @@ def check_magic_link_token():
                     st.session_state.program_selected = False
                 # Defer cookie write to next run — JS component not ready on first load.
                 st.session_state.pending_session_cookie = email
+                get_posthog().capture(
+                    distinct_id=email,
+                    event="user logged in",
+                    properties={"method": "magic_link", "$set": {"email": email}},
+                )
                 st.query_params.clear()
                 st.rerun()
             else:
@@ -1061,6 +1076,11 @@ def show_login_page():
                     if accessible:
                         if send_magic_link(email, accessible[0]["name"]):
                             st.session_state.magic_link_sent = True
+                            get_posthog().capture(
+                                distinct_id=email,
+                                event="magic_link_requested",
+                                properties={"$set": {"email": email}},
+                            )
                             st.rerun()
                     elif all_records:
                         st.error("This portal is not available for your program. Please contact your program manager.")
@@ -1164,10 +1184,16 @@ def show_dashboard():
         if st.button("Logout"):
             if cookies.get("student_session"):
                 cookies.remove("student_session")
+            logout_email = st.session_state.get("student_email")
             for key in ["authenticated", "student_name", "student_email", "student_record", "is_preview"]:
                 st.session_state[key] = False if key == "authenticated" or key == "is_preview" else None
             st.session_state.student_records = []
             st.session_state.program_selected = False
+            if logout_email:
+                get_posthog().capture(
+                    distinct_id=logout_email,
+                    event="user logged out",
+                )
             st.rerun()
 
     # ── Preview banner ──

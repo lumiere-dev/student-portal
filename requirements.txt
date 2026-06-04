@@ -4,3 +4,4 @@ pandas>=2.0.0
 resend>=0.7.0
 itsdangerous>=2.1.0
 streamlit-cookies-controller>=0.0.4
+posthog>=3.0.0
