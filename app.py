@@ -557,8 +557,8 @@ def format_date(date_str):
     except Exception:
         return date_str
 
-def format_datetime_ist(date_str):
-    """Format an ISO datetime string to a friendly format in IST (UTC+5:30)"""
+def format_datetime_for_student(date_str, student_tz=None):
+    """Format an ISO datetime string in the student's timezone (falls back to IST)."""
     if not date_str:
         return "Not set"
     if isinstance(date_str, list):
@@ -568,9 +568,14 @@ def format_datetime_ist(date_str):
     try:
         date_str = date_str.strip("'\"")
         date_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
-        ist = timezone(timedelta(hours=5, minutes=30))
-        date_obj = date_obj.replace(tzinfo=timezone.utc).astimezone(ist)
-        return date_obj.strftime("%b %#d, %Y %#I:%M %p IST")
+        tz = _parse_student_timezone(student_tz) if student_tz else None
+        if tz is None:
+            tz = timezone(timedelta(hours=5, minutes=30))  # IST fallback
+            tz_label = "IST"
+        else:
+            tz_label = (student_tz or "").strip().split("(")[0].strip()
+        date_obj = date_obj.replace(tzinfo=timezone.utc).astimezone(tz)
+        return date_obj.strftime("%b %#d, %Y %#I:%M %p") + f" {tz_label}"
     except Exception:
         return format_date(date_str)
 
@@ -1764,7 +1769,7 @@ def show_deadlines_and_submissions(student):
 
             with col3:
                 if status == "Submitted":
-                    st.success(f"Submitted {format_datetime_ist(dl['date_submitted'])}" if dl["date_submitted"] else "Submitted")
+                    st.success(f"Submitted {format_datetime_for_student(dl['date_submitted'], student_tz)}" if dl["date_submitted"] else "Submitted")
                 elif is_waived:
                     st.markdown(
                         '<span style="display:inline-block; background:#EEF2FF; color:#4F46E5; '
