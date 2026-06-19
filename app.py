@@ -3,7 +3,11 @@ import streamlit as st
 import streamlit.components.v1 as components
 from pyairtable import Api
 import pandas as pd
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date as date_type
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    ZoneInfo = None
 import resend
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import re
@@ -233,7 +237,8 @@ STUDENT_FIELDS = {
     "white_label_or_partner": "White Label or Partner Payment Program",
     "program_status": "PM: Student Status in Program",
     "program_pause_end_date": "Program Pause End Date",
-    "student_confirmed_launched": "Student Confirmed & Launched"
+    "student_confirmed_launched": "Student Confirmed & Launched",
+    "timezone": "What is your current timezone?"
 }
 
 DEADLINE_FIELDS = {
@@ -617,15 +622,176 @@ def track_umami_login(email):
         width=0,
     )
 
-def is_overdue(due_date_str, status):
-    """Check if deadline is overdue"""
+# ── Timezone resolution for student-submitted free-text timezone fields ──
+
+_TZ_ABBREV = {
+    "SGT": "Asia/Singapore", "SST": "Asia/Singapore",
+    "IST": "Asia/Kolkata",
+    "GST": "Asia/Dubai",
+    "EST": "America/New_York", "EDT": "America/New_York",
+    "PST": "America/Los_Angeles", "PDT": "America/Los_Angeles",
+    "CST": "America/Chicago", "CDT": "America/Chicago",
+    "MST": "America/Denver", "MDT": "America/Denver",
+    "AST": "America/Halifax", "ADT": "America/Halifax",
+    "HST": "Pacific/Honolulu", "HDT": "Pacific/Honolulu",
+    "AKST": "America/Anchorage", "AKDT": "America/Anchorage",
+    "BST": "Europe/London", "GMT": "UTC", "UTC": "UTC",
+    "CET": "Europe/Paris", "CEST": "Europe/Paris",
+    "EET": "Europe/Athens", "EEST": "Europe/Athens",
+    "MSK": "Europe/Moscow",
+    "TRT": "Europe/Istanbul",
+    "PKT": "Asia/Karachi",
+    "BDT": "Asia/Dhaka", "BST6": "Asia/Dhaka",
+    "NPT": "Asia/Kathmandu",
+    "ICT": "Asia/Bangkok",
+    "WIB": "Asia/Jakarta",
+    "PHT": "Asia/Manila",
+    "HKT": "Asia/Hong_Kong",
+    "JST": "Asia/Tokyo",
+    "KST": "Asia/Seoul",
+    "AEST": "Australia/Sydney", "AEDT": "Australia/Sydney",
+    "ACST": "Australia/Adelaide", "ACDT": "Australia/Adelaide",
+    "AWST": "Australia/Perth",
+    "NZST": "Pacific/Auckland", "NZDT": "Pacific/Auckland",
+    "EAT": "Africa/Nairobi",
+    "WAT": "Africa/Lagos",
+    "SAST": "Africa/Johannesburg",
+    "BRT": "America/Sao_Paulo",
+    "ART": "America/Argentina/Buenos_Aires",
+    "COT": "America/Bogota",
+    "PET": "America/Lima",
+    "CLT": "America/Santiago", "CLST": "America/Santiago",
+    "VET": "America/Caracas",
+    "CAT": "Africa/Harare",
+    "GET": "Asia/Tbilisi",
+    "AMT": "Asia/Yerevan",
+}
+
+_TZ_NAMES = {
+    "INDIAN STANDARD TIME": "Asia/Kolkata",
+    "PACIFIC STANDARD TIME": "America/Los_Angeles",
+    "PACIFIC TIME": "America/Los_Angeles",
+    "PACIFIC DAYLIGHT TIME": "America/Los_Angeles",
+    "MOUNTAIN STANDARD TIME": "America/Denver",
+    "MOUNTAIN TIME": "America/Denver",
+    "MOUNTAIN DAYLIGHT TIME": "America/Denver",
+    "CENTRAL STANDARD TIME": "America/Chicago",
+    "CENTRAL TIME": "America/Chicago",
+    "CENTRAL DAYLIGHT TIME": "America/Chicago",
+    "EASTERN STANDARD TIME": "America/New_York",
+    "EASTERN TIME": "America/New_York",
+    "EASTERN DAYLIGHT TIME": "America/New_York",
+    "ALASKA STANDARD TIME": "America/Anchorage",
+    "HAWAII STANDARD TIME": "Pacific/Honolulu",
+    "GULF STANDARD TIME": "Asia/Dubai",
+    "SINGAPORE TIME": "Asia/Singapore",
+    "SINGAPORE STANDARD TIME": "Asia/Singapore",
+    "GREENWICH MEAN TIME": "UTC",
+    "COORDINATED UNIVERSAL TIME": "UTC",
+    "BRITISH SUMMER TIME": "Europe/London",
+    "CENTRAL EUROPEAN TIME": "Europe/Paris",
+    "EASTERN EUROPEAN TIME": "Europe/Athens",
+    "MOSCOW STANDARD TIME": "Europe/Moscow",
+    "TURKEY TIME": "Europe/Istanbul",
+    "PAKISTAN STANDARD TIME": "Asia/Karachi",
+    "BANGLADESH STANDARD TIME": "Asia/Dhaka",
+    "NEPAL TIME": "Asia/Kathmandu",
+    "INDOCHINA TIME": "Asia/Bangkok",
+    "INDONESIA WESTERN TIME": "Asia/Jakarta",
+    "PHILIPPINE TIME": "Asia/Manila",
+    "HONG KONG TIME": "Asia/Hong_Kong",
+    "JAPAN STANDARD TIME": "Asia/Tokyo",
+    "KOREA STANDARD TIME": "Asia/Seoul",
+    "AUSTRALIAN EASTERN STANDARD TIME": "Australia/Sydney",
+    "AUSTRALIAN EASTERN TIME": "Australia/Sydney",
+    "AUSTRALIAN CENTRAL STANDARD TIME": "Australia/Adelaide",
+    "AUSTRALIAN WESTERN STANDARD TIME": "Australia/Perth",
+    "NEW ZEALAND STANDARD TIME": "Pacific/Auckland",
+    "EAST AFRICA TIME": "Africa/Nairobi",
+    "WEST AFRICA TIME": "Africa/Lagos",
+    "SOUTH AFRICA STANDARD TIME": "Africa/Johannesburg",
+    "BRAZIL TIME": "America/Sao_Paulo",
+    "ARGENTINA TIME": "America/Argentina/Buenos_Aires",
+    "COLOMBIA TIME": "America/Bogota",
+    "PERU TIME": "America/Lima",
+    "CHILE TIME": "America/Santiago",
+    "VENEZUELA TIME": "America/Caracas",
+}
+
+
+def _parse_student_timezone(tz_str):
+    """Parse a student's free-text timezone entry into a tzinfo, or None if unrecognised."""
+    if not tz_str or not isinstance(tz_str, str):
+        return None
+    raw = tz_str.strip()
+
+    # Build candidate strings: the full input, and the token before any '(' or after it
+    candidates = [raw]
+    paren = raw.find("(")
+    if paren > 0:
+        candidates.insert(0, raw[:paren].strip())
+        m = re.search(r"\(([^)]+)\)", raw)
+        if m:
+            candidates.append(m.group(1).strip())
+
+    for c in candidates:
+        key = c.upper().strip()
+
+        # 1. Abbreviation table
+        if key in _TZ_ABBREV and ZoneInfo is not None:
+            try:
+                return ZoneInfo(_TZ_ABBREV[key])
+            except Exception:
+                pass
+
+        # 2. Full-name table
+        if key in _TZ_NAMES and ZoneInfo is not None:
+            try:
+                return ZoneInfo(_TZ_NAMES[key])
+            except Exception:
+                pass
+
+        # 3. UTC/GMT numeric offset  e.g. "GMT+6", "UTC+5:30", "(UTC+02:00)", "gmt-3:30"
+        m = re.match(r"^(?:UTC|GMT)?\s*([+-])\s*(\d{1,2})(?::(\d{2}))?$", key)
+        if m:
+            sign = 1 if m.group(1) == "+" else -1
+            h, mn = int(m.group(2)), int(m.group(3) or 0)
+            return timezone(timedelta(hours=sign * h, minutes=sign * mn))
+
+        # 4. Bare signed offset e.g. "+05:30"
+        m = re.match(r"^([+-])(\d{2}):(\d{2})$", key)
+        if m:
+            sign = 1 if m.group(1) == "+" else -1
+            return timezone(timedelta(hours=sign * int(m.group(2)), minutes=sign * int(m.group(3))))
+
+        # 5. Try as a raw IANA name directly (e.g. "Asia/Kolkata")
+        if ZoneInfo is not None:
+            try:
+                return ZoneInfo(c)
+            except Exception:
+                pass
+
+    return None
+
+
+def get_today_for_student(tz_str):
+    """Return today's *date* in the student's timezone; falls back to server date."""
+    tz = _parse_student_timezone(tz_str)
+    if tz:
+        return datetime.now(tz).date()
+    return datetime.now().date()
+
+
+def is_overdue(due_date_str, status, student_tz=None):
+    """Check if a deadline is overdue relative to the student's local date."""
     if status in ("Submitted", "Deadline Waived"):
         return False
     if not due_date_str:
         return False
     try:
-        due_date = datetime.strptime(due_date_str, "%Y-%m-%d")
-        return due_date < datetime.now()
+        due_date = datetime.strptime(due_date_str, "%Y-%m-%d").date()
+        today = get_today_for_student(student_tz)
+        return due_date < today
     except Exception:
         return False
 
@@ -717,7 +883,8 @@ def _build_student_dict(record, email):
         "white_label_or_partner": fields.get(STUDENT_FIELDS["white_label_or_partner"], ""),
         "program_status": unwrap(fields.get(STUDENT_FIELDS["program_status"], "")),
         "program_pause_end_date": fields.get(STUDENT_FIELDS["program_pause_end_date"], ""),
-        "student_confirmed_launched": fields.get(STUDENT_FIELDS["student_confirmed_launched"], "")
+        "student_confirmed_launched": fields.get(STUDENT_FIELDS["student_confirmed_launched"], ""),
+        "timezone": fields.get(STUDENT_FIELDS["timezone"], ""),
     }
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -1398,7 +1565,9 @@ def show_student_profile_summary(student):
 # ──────────────────────────────────────────────
 
 @st.dialog("📋 Your Deadlines at a Glance")
-def show_deadlines_popup(overdue, upcoming):
+def show_deadlines_popup(overdue, upcoming, student_today=None):
+    if student_today is None:
+        student_today = datetime.now().date()
     if overdue:
         st.markdown("#### ⚠️ Overdue")
         for d in overdue:
@@ -1413,7 +1582,7 @@ def show_deadlines_popup(overdue, upcoming):
     if upcoming:
         st.markdown("#### ⏰ Coming Up")
         for d in upcoming[:3]:
-            days_left = (datetime.strptime(d["due_date"], "%Y-%m-%d") - datetime.now()).days
+            days_left = (datetime.strptime(d["due_date"], "%Y-%m-%d").date() - student_today).days
             st.markdown(f"""
             <div style="background:rgba(190,30,45,0.06); border:1px solid #BE1E2D;
                         border-radius:8px; padding:0.6rem 0.9rem; margin-bottom:0.5rem;">
@@ -1470,25 +1639,27 @@ def show_deadlines_and_submissions(student):
         st.info("No deadlines found for your program yet.")
         return
 
+    student_tz = student.get("timezone", "")
+    today = get_today_for_student(student_tz)
+
     # ── Auto-open popup once per page visit ──
     popup_key = f"deadlines_popup_shown_{student['name']}"
     if not st.session_state.get(popup_key):
         st.session_state[popup_key] = True
-        now = datetime.now()
         actionable = [d for d in deadlines if d["status"] not in ("Submitted", "Deadline Waived") and d["due_date"]]
-        overdue_items = [d for d in actionable if datetime.strptime(d["due_date"], "%Y-%m-%d") < now]
+        overdue_items = [d for d in actionable if datetime.strptime(d["due_date"], "%Y-%m-%d").date() < today]
         upcoming_items = sorted(
-            [d for d in actionable if datetime.strptime(d["due_date"], "%Y-%m-%d") >= now],
+            [d for d in actionable if datetime.strptime(d["due_date"], "%Y-%m-%d").date() >= today],
             key=lambda x: x["due_date"]
         )
         if overdue_items or upcoming_items:
-            show_deadlines_popup(overdue_items, upcoming_items)
+            show_deadlines_popup(overdue_items, upcoming_items, student_today=today)
 
     # ── Summary bar ──
     total = len(deadlines)
     submitted_count = sum(1 for d in deadlines if d["status"] == "Submitted")
     waived_count = sum(1 for d in deadlines if d["status"] == "Deadline Waived")
-    overdue_count = sum(1 for d in deadlines if is_overdue(d["due_date"], d["status"]))
+    overdue_count = sum(1 for d in deadlines if is_overdue(d["due_date"], d["status"], student_tz))
     pending_count = total - submitted_count - waived_count - overdue_count
 
     summary_dots = [
@@ -1512,10 +1683,9 @@ def show_deadlines_and_submissions(student):
 
     # ── Overdue + Next Deadline banners (exclude waived) ──
     try:
-        now = datetime.now()
         actionable_dl = [d for d in deadlines if d["status"] not in ("Submitted", "Deadline Waived") and d["due_date"]]
-        overdue_dl = [d for d in actionable_dl if datetime.strptime(d["due_date"], "%Y-%m-%d") < now]
-        future_dl = [d for d in actionable_dl if datetime.strptime(d["due_date"], "%Y-%m-%d") >= now]
+        overdue_dl = [d for d in actionable_dl if datetime.strptime(d["due_date"], "%Y-%m-%d").date() < today]
+        future_dl = [d for d in actionable_dl if datetime.strptime(d["due_date"], "%Y-%m-%d").date() >= today]
 
         if overdue_dl:
             overdue_list = ", ".join(
@@ -1531,7 +1701,7 @@ def show_deadlines_and_submissions(student):
 
         if future_dl:
             next_dl = future_dl[0]
-            days_left = (datetime.strptime(next_dl["due_date"], "%Y-%m-%d") - now).days
+            days_left = (datetime.strptime(next_dl["due_date"], "%Y-%m-%d").date() - today).days
             st.markdown(
                 f'<div style="background:rgba(220,30,53,0.1); border:1px solid #DC1E35; '
                 f'border-radius:10px; padding:1rem; margin-bottom:1rem;">'
@@ -1551,7 +1721,7 @@ def show_deadlines_and_submissions(student):
     def _render_deadline_row(dl):
         dtype = dl["type"] or "Deadline"
         status = dl["status"]
-        overdue = is_overdue(dl["due_date"], status)
+        overdue = is_overdue(dl["due_date"], status, student_tz)
         is_waived = status == "Deadline Waived"
 
         if status == "Submitted":
