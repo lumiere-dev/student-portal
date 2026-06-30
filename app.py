@@ -830,8 +830,7 @@ def get_student_publication_record(tracker_value):
             ]
         )
         return records[0] if records else None
-    except Exception as e:
-        st.error(f"Error fetching student application: {e}")
+    except Exception:
         return None
 
 def _build_student_dict(record, email):
@@ -912,14 +911,10 @@ def get_all_student_records_by_email(email):
     """Find all records for an email — returns a list (students with multiple programs)."""
     tables = get_tables()
     email_field = get_secret("STUDENT_EMAIL_FIELD", "Email")
-    try:
-        records = tables["students"].all(
-            formula=f"LOWER({{{email_field}}}) = LOWER('{email}')"
-        )
-        return [_build_student_dict(r, email) for r in records]
-    except Exception as e:
-        st.error(f"Error fetching student records: {e}")
-    return []
+    records = tables["students"].all(
+        formula=f"LOWER({{{email_field}}}) = LOWER('{email}')"
+    )
+    return [_build_student_dict(r, email) for r in records]
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_deadlines_for_student(student_name):
@@ -971,8 +966,11 @@ def check_session_cookie():
     if token:
         email = verify_session_token(token)
         if email:
-            with st.spinner("Loading your portal..."):
-                students = filter_accessible_records(get_all_student_records_by_email(email))
+            try:
+                with st.spinner("Loading your portal..."):
+                    students = filter_accessible_records(get_all_student_records_by_email(email))
+            except Exception:
+                return
             if students:
                 st.session_state.authenticated = True
                 st.session_state.student_email = email
@@ -994,8 +992,13 @@ def check_magic_link_token():
         token = query_params["token"]
         email = verify_magic_token(token)
         if email:
-            with st.spinner("Loading your portal..."):
-                students = filter_accessible_records(get_all_student_records_by_email(email))
+            try:
+                with st.spinner("Loading your portal..."):
+                    students = filter_accessible_records(get_all_student_records_by_email(email))
+            except Exception:
+                st.error("Something went wrong loading your portal. Please try your link again or request a new one.")
+                st.query_params.clear()
+                return
             if students:
                 st.session_state.authenticated = True
                 st.session_state.student_email = email
@@ -1242,8 +1245,12 @@ def show_login_page():
                 submitted = st.form_submit_button("Send Magic Link", use_container_width=True)
 
                 if submitted and email:
-                    with st.spinner("Looking up your account — this may take a few seconds..."):
-                        all_records = get_all_student_records_by_email(email)
+                    try:
+                        with st.spinner("Looking up your account — this may take a few seconds..."):
+                            all_records = get_all_student_records_by_email(email)
+                    except Exception:
+                        st.error("Something went wrong looking up your account. Please try again in a moment.")
+                        all_records = []
                     accessible = filter_accessible_records(all_records)
                     if accessible:
                         if send_magic_link(email, accessible[0]["name"]):
@@ -1269,8 +1276,12 @@ def show_login_page():
                 preview_submitted = st.form_submit_button("Preview as Student", use_container_width=True)
 
                 if preview_submitted and preview_email:
-                    with st.spinner("Looking up student — this may take a few seconds..."):
-                        all_records = get_all_student_records_by_email(preview_email)
+                    try:
+                        with st.spinner("Looking up student — this may take a few seconds..."):
+                            all_records = get_all_student_records_by_email(preview_email)
+                    except Exception:
+                        st.error("Failed to fetch student data from Airtable. Please try again.")
+                        all_records = []
                     accessible = filter_accessible_records(all_records)
                     if accessible:
                         st.session_state.authenticated = True
