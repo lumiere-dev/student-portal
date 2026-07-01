@@ -2070,7 +2070,7 @@ def show_publication_program(student):
     st.markdown("<div style='margin-top:0.75rem;'></div>", unsafe_allow_html=True)
 
     # Workshop 1 — always visible
-    WORKSHOP_1_URL = "https://us06web.zoom.us/rec/share/oDDE86O8mqbRv2N9FNms5ATIlxzqF-3zl3EyZkno5M-duawenv6E-yBQ6RwVWNZz.jolPyUGFJtbRvbC0"
+    WORKSHOP_1_URL = "https://us06web.zoom.us/rec/play/qXshj04Q7Hh1vKfuDTZwaDsifq9bOFbO4Lc-77tdma-efk_rX-qCZKRRUtjF3q9035Qw1SnovXB4NQQ.8TVZpqemrV6JCA9X?accessLevel=meeting&canPlayFromShare=true&from=share_recording_detail&continueMode=true&oldStyle=true&componentName=rec-play&originRequestUrl=https%3A%2F%2Fus06web.zoom.us%2Frec%2Fshare%2FQA1v2WRNMV5MvCHEip3bsoAX9g-pQMoM6p83n8QqO3OwwcdtUhWy4O7oMgeD1z9u.0JEX0fwAC6j-tp3V"
     st.markdown(
         f'<div class="info-card" style="margin-bottom:1rem;">'
         f'<div style="font-size:0.72rem; font-weight:700; color:#1E293B; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.3rem;">Introduction to Publication</div>'
