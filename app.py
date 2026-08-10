@@ -247,7 +247,8 @@ DEADLINE_FIELDS = {
     "due_date": "Due Date (in use, updated to reflect student's timeline)",
     "status": "Deadline Status",
     "date_submitted": "Date Submitted",
-    "student_link": "Student Application & Cohort Tracker"
+    "student_link": "Student Application & Cohort Tracker",
+    "student_record_id": "record id (from Student Application & Cohort Tracker)"
 }
 
 SUBMISSION_FIELDS = [
@@ -917,12 +918,14 @@ def get_all_student_records_by_email(email):
     return [_build_student_dict(r, email) for r in records]
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def get_deadlines_for_student(student_name):
-    """Get all deadlines for a specific student"""
+def get_deadlines_for_student(student_id):
+    """Get all deadlines for a specific student, matched by Airtable record ID
+    rather than display name (names containing commas, e.g. "Last, First",
+    get quote-wrapped by Airtable when a linked record's text is resolved in a
+    formula, which silently breaks an exact string match)."""
     tables = get_tables()
     try:
-        escaped = student_name.replace("'", "\\'")
-        formula = f"{{{DEADLINE_FIELDS['student_link']}}} = '{escaped}'"
+        formula = f"{{{DEADLINE_FIELDS['student_record_id']}}} = '{student_id}'"
         records = tables["deadlines"].all(formula=formula)
 
         deadlines = []
@@ -1545,7 +1548,7 @@ def show_student_profile_summary(student):
 """, unsafe_allow_html=True)
 
     # Syllabus
-    all_deadlines = get_deadlines_for_student(student["name"])
+    all_deadlines = get_deadlines_for_student(student["id"])
     syllabus_dl = next((d for d in all_deadlines if d.get("type") == "Syllabus"), None)
     syllabus_attachment = None
     if syllabus_dl:
@@ -1648,7 +1651,7 @@ def show_deadlines_and_submissions(student):
         """, unsafe_allow_html=True)
 
     EXCLUDED_TYPES = {"Syllabus", "Evaluation & Feedback"}
-    all_deadlines = get_deadlines_for_student(student["name"])
+    all_deadlines = get_deadlines_for_student(student["id"])
     deadlines = [d for d in all_deadlines if d.get("type") not in EXCLUDED_TYPES]
 
     if not deadlines:
