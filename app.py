@@ -835,18 +835,20 @@ def get_student_publication_record(tracker_value):
         return None
 
 def _build_student_dict(record, email):
-    """Build a student dict from a raw Airtable record."""
+    """Build a student dict from a raw Airtable record.
+
+    Note: this does NOT fetch the student's Publication Program record —
+    that lives in a separate Airtable base and is only needed when the
+    student actually opens the "Publication Program" tab (see
+    show_publication_program). This function backs the account lookup on
+    the login path (magic link request, magic link click, session-cookie
+    check), so it stays limited to a single Airtable base/call per record;
+    otherwise every login would pay for a second base's query even though
+    login only needs the Student table's own fields.
+    """
     email_field = get_secret("STUDENT_EMAIL_FIELD", "Email")
     fields = record["fields"]
     tracker_value = fields.get(STUDENT_FIELDS["name"], "")
-    raw_marker = fields.get(STUDENT_FIELDS["publication_marker"], [])
-    pub_marker = raw_marker[0] if isinstance(raw_marker, list) and raw_marker else raw_marker
-    pub_marker_vals = raw_marker if isinstance(raw_marker, list) else [raw_marker]
-    if any(str(v).strip() == "Yes" for v in pub_marker_vals if v):
-        application = get_student_publication_record(tracker_value)
-        app_fields = application["fields"] if application else {}
-    else:
-        app_fields = {}
     return {
         "id": record["id"],
         "name": tracker_value or "Unknown",
@@ -873,17 +875,7 @@ def _build_student_dict(record, email):
         "revised_final_paper_due": unwrap(fields.get(STUDENT_FIELDS["revised_final_paper_due"], "")),
         "student_no_shows": unwrap(fields.get(STUDENT_FIELDS["student_no_shows"], 0), default=0),
         "reason_for_interest": unwrap(fields.get(STUDENT_FIELDS["reason_for_interest"], "")),
-        "publication_target": app_fields.get("Publication Target (text)", ""),
         "submission_portal": unwrap(fields.get(STUDENT_FIELDS["submission_portal"], "")),
-        "publication_specialist": app_fields.get("Publication Specialist (Text)", ""),
-        "publication_specialist_email": app_fields.get("Publication Specialist Email", ""),
-        "publication_outcome": app_fields.get("PS: Latest Publication Outcome - (latest)", ""),
-        "target_submission_workshop": app_fields.get("Target Submission Workshop", ""),
-        "target_intro_workshop": app_fields.get("Target Intro Workshop", ""),
-        "target_one_pager": app_fields.get("Target One-Pager", ""),
-        "quiz_1_status": app_fields.get("Checkpoint: Quiz 1 Status (Automated)", ""),
-        "quiz_2_status": app_fields.get("Checkpoint: Quiz 2 Status (Automated)", ""),
-        "quiz_3_status": app_fields.get("Checkpoint: Quiz 3 Status (Automated)", ""),
         "publication_marker": fields.get(STUDENT_FIELDS["publication_marker"], []),
         "white_label_or_partner": fields.get(STUDENT_FIELDS["white_label_or_partner"], ""),
         "program_status": unwrap(fields.get(STUDENT_FIELDS["program_status"], "")),
@@ -2005,10 +1997,20 @@ def show_publication_program(student):
     </div>
     """, unsafe_allow_html=True)
 
-    specialist = student.get("publication_specialist") or "Not yet assigned"
-    specialist_email = student.get("publication_specialist_email") or ""
-    target = student.get("publication_target") or ""
-    outcome = student.get("publication_outcome") or ""
+    # Publication data lives in a separate Airtable base, so it's fetched
+    # here (lazily, only when this tab is opened) rather than during login.
+    raw_marker = student.get("publication_marker", [])
+    pub_marker_vals = raw_marker if isinstance(raw_marker, list) else [raw_marker]
+    if any(str(v).strip() == "Yes" for v in pub_marker_vals if v):
+        application = get_student_publication_record(student.get("name", ""))
+        app_fields = application["fields"] if application else {}
+    else:
+        app_fields = {}
+
+    specialist = app_fields.get("Publication Specialist (Text)") or "Not yet assigned"
+    specialist_email = app_fields.get("Publication Specialist Email") or ""
+    target = app_fields.get("Publication Target (text)") or ""
+    outcome = app_fields.get("PS: Latest Publication Outcome - (latest)") or ""
 
     OUTCOME_MESSAGES = {
         "accepted": ("Your paper has been accepted for publication, congratulations! Please remember to share the link to your final published paper with your publication specialist.", "#16A34A", "#F0FDF4"),
@@ -2023,12 +2025,12 @@ def show_publication_program(student):
     }
     outcome_key = outcome.strip().lower()
     outcome_message, outcome_color, outcome_bg = OUTCOME_MESSAGES.get(outcome_key, ("", "#64748B", "#F8FAFC"))
-    submission_workshop = student.get("target_submission_workshop") or ""
-    intro_workshop = student.get("target_intro_workshop") or ""
-    one_pager = student.get("target_one_pager") or ""
-    quiz_1 = student.get("quiz_1_status") or ""
-    quiz_2 = student.get("quiz_2_status") or ""
-    quiz_3 = student.get("quiz_3_status") or ""
+    submission_workshop = app_fields.get("Target Submission Workshop") or ""
+    intro_workshop = app_fields.get("Target Intro Workshop") or ""
+    one_pager = app_fields.get("Target One-Pager") or ""
+    quiz_1 = app_fields.get("Checkpoint: Quiz 1 Status (Automated)") or ""
+    quiz_2 = app_fields.get("Checkpoint: Quiz 2 Status (Automated)") or ""
+    quiz_3 = app_fields.get("Checkpoint: Quiz 3 Status (Automated)") or ""
 
 
     # Publication Specialist card
